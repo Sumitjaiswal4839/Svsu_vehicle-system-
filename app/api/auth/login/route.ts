@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { cookies } from 'next/headers';
+import { logAudit } from '@/lib/audit';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
 
@@ -29,42 +30,64 @@ export async function POST(request: Request) {
     }
 
     if (!user.isAuthorized && user.role !== 'ADMIN') {
-      return NextResponse.json({ error: 'Access Denied. Your account is pending authorization by an Admin.' }, { status: 403 });
+      return NextResponse.json({ error: 'Access Denied. Account pending authorization.' }, { status: 403 });
     }
 
-    // Create JWT
-    const token = await new SignJWT({ 
+    // 1. Create Short-lived Access Token (15 mins)
+    const accessToken = await new SignJWT({ 
       id: user.id, 
       username: user.username, 
       role: user.role 
     })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt()
-      .setExpirationTime('24h')
+      .setExpirationTime('15m')
       .sign(JWT_SECRET);
 
-    // Set HTTP-only cookies
+    // 2. Create Long-lived Refresh Token (7 days)
+    const refreshToken = await new SignJWT({ id: user.id })
+      .setProtectedHeader({ alg: 'HS256' })
+      .setIssuedAt()
+      .setExpirationTime('7d')
+      .sign(JWT_SECRET);
+
     const cookieStore = await cookies();
     
-    // Primary auth token
-    cookieStore.set('auth_token', token, {
+    // Access Token
+    cookieStore.set('auth_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      maxAge: 60 * 60 * 24, // 1 day
+      maxAge: 15 * 60,
       path: '/',
     });
 
-    // Special admin token for dashboard access
+    // Refresh Token
+    cookieStore.set('refresh_token', refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 7 * 24 * 60 * 60,
+      path: '/',
+    });
+
     if (user.role === 'ADMIN') {
-      cookieStore.set('admin_token', token, {
+      cookieStore.set('admin_token', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'lax',
-        maxAge: 60 * 60 * 24,
+        maxAge: 15 * 60,
         path: '/',
       });
     }
+
+    // Audit Log
+    await logAudit({
+      userId: user.id,
+      action: 'LOGIN',
+      resource: `User: ${user.username}`,
+      metadata: { role: user.role }
+    });
 
     return NextResponse.json({ message: 'Login successful', role: user.role });
   } catch (error) {

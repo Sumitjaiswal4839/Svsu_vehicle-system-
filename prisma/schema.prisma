@@ -73,5 +73,20 @@ model User {
   password     String
   role         String  @default("GUARD") // GUARD or ADMIN
   isAuthorized Boolean @default(false)
+  auditLogs    AuditLog[]
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  action    String   // LOGIN, ENTRY_AUTH, EXIT_AUTH, VISITOR_ADD, ADMIN_UNLOCK
+  resource  String?  // e.g., "Vehicle HR26-1234"
+  metadata  Json?    // Extra info (Browser, IP, etc.)
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([action])
 }
 
