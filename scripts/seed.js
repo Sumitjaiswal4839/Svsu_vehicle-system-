@@ -7,7 +7,6 @@ require('dotenv').config();
 const connectionString = process.env.DATABASE_URL;
 const pool = new pg.Pool({
   connectionString,
-  // Supabase pooler TLS chain can fail local validation.
   ssl: { rejectUnauthorized: false },
 });
 const adapter = new PrismaPg(pool);
@@ -24,10 +23,6 @@ async function main() {
     );
   }
 
-  if (adminPassword === guardPassword) {
-    throw new Error('SEED_ADMIN_PASSWORD and SEED_GUARD_PASSWORD must be different.');
-  }
-
   const [adminHash, guardHash] = await Promise.all([
     bcrypt.hash(adminPassword, 10),
     bcrypt.hash(guardPassword, 10),
@@ -40,6 +35,7 @@ async function main() {
       username: '@admin',
       password: adminHash,
       role: 'ADMIN',
+      isAuthorized: true,
     },
   });
 
@@ -50,6 +46,7 @@ async function main() {
       username: '@guard',
       password: guardHash,
       role: 'GUARD',
+      isAuthorized: false,
     },
   });
 

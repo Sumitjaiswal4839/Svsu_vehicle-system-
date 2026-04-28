@@ -68,9 +68,10 @@ model EntryRecord {
 
 
 model User {
-  id       String @id @default(uuid())
-  username String @unique
-  password String
-  role     String @default("GUARD") // GUARD or ADMIN
+  id           String  @id @default(uuid())
+  username     String  @unique
+  password     String
+  role         String  @default("GUARD") // GUARD or ADMIN
+  isAuthorized Boolean @default(false)
 }
 

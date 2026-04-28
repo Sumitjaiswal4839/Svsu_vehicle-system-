@@ -10,12 +10,8 @@ if (!rawConnectionString) {
   throw new Error("DATABASE_URL is not set");
 }
 
-const parsedConnection = new URL(rawConnectionString);
-// Let pg's explicit ssl object drive TLS behavior for Supabase pooler.
-parsedConnection.searchParams.delete("sslmode");
-
 const pool = new pg.Pool({
-  connectionString: parsedConnection.toString(),
+  connectionString: rawConnectionString,
   ssl: { rejectUnauthorized: false },
 });
 const adapter = new PrismaPg(pool);

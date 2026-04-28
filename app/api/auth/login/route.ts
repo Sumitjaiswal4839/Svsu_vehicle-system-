@@ -28,6 +28,10 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
     }
 
+    if (!user.isAuthorized && user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Access Denied. Your account is pending authorization by an Admin.' }, { status: 403 });
+    }
+
     // Create JWT
     const token = await new SignJWT({ 
       id: user.id, 
@@ -39,14 +43,28 @@ export async function POST(request: Request) {
       .setExpirationTime('24h')
       .sign(JWT_SECRET);
 
-    // Set HTTP-only cookie
-    (await cookies()).set('auth_token', token, {
+    // Set HTTP-only cookies
+    const cookieStore = await cookies();
+    
+    // Primary auth token
+    cookieStore.set('auth_token', token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       maxAge: 60 * 60 * 24, // 1 day
       path: '/',
     });
+
+    // Special admin token for dashboard access
+    if (user.role === 'ADMIN') {
+      cookieStore.set('admin_token', token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'lax',
+        maxAge: 60 * 60 * 24,
+        path: '/',
+      });
+    }
 
     return NextResponse.json({ message: 'Login successful', role: user.role });
   } catch (error) {

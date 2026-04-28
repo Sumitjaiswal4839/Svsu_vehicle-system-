@@ -15,6 +15,7 @@ const geistMono = Geist_Mono({
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Toaster } from "sonner";
+import HiddenTerminal from "@/components/HiddenTerminal";
 
 export const metadata: Metadata = {
   title: "SVSU Vehicle Info | Entry-Exit System",
@@ -39,6 +40,7 @@ export default function RootLayout({
         <div className="watermark" />
         <ThemeProvider>
           <Toaster position="top-right" richColors />
+          <HiddenTerminal />
           {children}
         </ThemeProvider>
       </body>
