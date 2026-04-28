@@ -38,6 +38,7 @@ function ProfileContent() {
     name: '',
     course: '',
     semester: '',
+    faculty: '',
     rollNo: '',
     password: '',
     vehicleNo: '',
@@ -100,8 +101,8 @@ function ProfileContent() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.rollNo || !formData.vehicleNo || !formData.rcPhoto || !formData.idCardFront || !formData.idCardBack || !formData.password) {
-      toast.error('Please fill all mandatory fields including Password, RC, and ID cards');
+    if (!formData.name || !formData.rollNo || !formData.vehicleNo || !formData.rcPhoto || !formData.idCardFront || !formData.idCardBack || !formData.password || !formData.faculty || !formData.semester || !formData.course) {
+      toast.error('Please fill all mandatory fields');
       return;
     }
 
@@ -241,14 +242,50 @@ function ProfileContent() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Course</label>
-                  <input
-                    name="course"
-                    value={formData.course}
+                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Faculty</label>
+                  <select
+                    name="faculty"
+                    value={formData.faculty}
                     onChange={handleChange}
-                    placeholder="B.Tech CS"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
-                  />
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
+                  >
+                    <option value="">Select Faculty</option>
+                    <option value="Engineering & Technology">Engineering & Technology</option>
+                    <option value="Management & Commerce">Management & Commerce</option>
+                    <option value="Agriculture">Agriculture</option>
+                    <option value="Law">Law</option>
+                    <option value="Arts & Humanities">Arts & Humanities</option>
+                    <option value="Science">Science</option>
+                    <option value="Education">Education</option>
+                    <option value="Nursing & Pharmacy">Nursing & Pharmacy</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Course</label>
+                    <input
+                      name="course"
+                      value={formData.course}
+                      onChange={handleChange}
+                      placeholder="B.Tech CS"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Semester</label>
+                    <select
+                      name="semester"
+                      value={formData.semester}
+                      onChange={handleChange}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
+                    >
+                      <option value="">Select Semester</option>
+                      {[1,2,3,4,5,6,7,8].map(sem => (
+                        <option key={sem} value={`${sem}${sem === 1 ? 'st' : sem === 2 ? 'nd' : sem === 3 ? 'rd' : 'th'}`}>{sem}{sem === 1 ? 'st' : sem === 2 ? 'nd' : sem === 3 ? 'rd' : 'th'} Sem</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <button
