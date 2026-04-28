@@ -1,56 +1,67 @@
-# SVSU Vehicle Security System - Project Status
+# 🛡️ SVSU Vehicle Security System (SV-VSS) - Project Status
 
-This document summarizes the enhancements, features, and pending tasks for the SVSU Vehicle Security System.
-
-## ✅ Completed Enhancements
-
-### 1. Database & Performance (Prisma + Supabase)
-- **High-Scale Indexing**: Added `@@index` to `rollNo`, `vehicleNo`, and `profileId` in the Prisma schema. This ensures that lookups for 5000+ students remain instant.
-- **Unified Entry/Exit Schema**: Enhanced `EntryRecord` to support both Permanent Users (Students/Staff) and Temporary Visitors.
-- **Auto-Cleanup**: Logic implemented in `app/api/exit/route.ts` to permanently delete temporary visitor data upon exit for privacy.
-
-### 2. Premium Guard Dashboard (`/admin`)
-- **Real-time Monitoring**: 3-tab system (Active, Temporary, Exited) with live status.
-- **Overstay Alerts**: Entries older than 12 hours are highlighted in red with alert icons.
-- **Integrated QR Scanner**: Uses `html5-qrcode` for instant scanning of student passes at the gate.
-- **Gate Sign Printing**: New page (`/admin/gate-qr`) for printing high-quality Entry/Exit QR signs for physical gates.
-
-### 3. Student Portal (`/profile`)
-- **Self-Registration**: Students can register their vehicle, upload mandatory RC photos, and manage their profile.
-- **Digital Gate Pass**: Generates a permanent QR code for each student. This pass can be downloaded as an image and shown at the gate for auto-entry.
-
-### 4. Smart Entry/Exit Flow
-- **Auto-Processing**: Scanning a student's QR pass automatically fetches their profile and registers entry/exit without manual typing.
-- **Dynamic Routing**: `/entry` and `/exit` pages now detect `profileId` in the URL and process registration automatically.
-
-### 5. PWA & Cross-Platform Support
-- **Mobile Optimized**: Fully responsive UI designed for iOS and Android.
-- **Home Screen Installation**: Added `manifest.json` and PWA metadata. Users can "Add to Home Screen" to use the system like a native app.
-- **Premium Dark Aesthetics**: Consistent "Security Center" theme across all pages with glassmorphism and smooth animations.
+## 🚀 Current Milestone: Enterprise Security & Student Portal (V2)
+The system has been upgraded from a basic entry logger to a full-scale **Identity & Access Management (IAM)** platform for SVSU Campus. It is now optimized for security, performance (5000+ students), and professional aesthetics.
 
 ---
 
-## ⏳ Pending Tasks (Next Steps)
+## 🛠️ Key Features Implemented
 
-### 1. Deployment (Railway / Render)
-- [ ] Create a **Private** GitHub repository and push the code.
-- [ ] Connect the repository to **Railway.app** or **Render.com**.
-- [ ] Add Environment Variables in the hosting dashboard (DATABASE_URL, JWT_SECRET, etc.).
+### 1. 🎓 Advanced Student Portal
+- **Secure Onboarding**: Multi-step registration flow with mandatory document verification.
+- **Identity Documents**: Compulsory upload of **RC Photo**, **College ID (Front)**, and **College ID (Back)**.
+- **Edit Profile**: Students can now update their details and documents via a secure update flow.
+- **Digital Gate Pass**: Instant QR generation for students, optimized for mobile home-screen (PWA).
 
-### 2. Supabase Storage Setup
-- [ ] Create a bucket named **"photos"** in Supabase Storage.
-- [ ] Set the bucket to **Public** for dashboard image rendering.
+### 2. 🔐 Multi-Layered Security
+- **Authentication**: JWT-based session management with **5-day persistence**.
+- **Password Protection**: Industry-standard **BCrypt hashing** for all student passwords.
+- **Human Verification**: Custom **Math Captcha** on Login and Reset Password pages to block bots.
+- **Duplicate Prevention**: Logic to prevent multiple registrations for the same Roll Number.
+- **Secure Reset**: Password recovery using **Roll No + Vehicle No** verification (No email required).
 
-### 3. Database Initialization
-- [ ] Run `npm run seed` to create the initial Guard and Admin accounts.
+### 3. 📊 Guard Control Center
+- **Live Security Feed**: Real-time monitoring of active/exited vehicles.
+- **Smart Scanning**: Integrated scanner that handles instant registration of entries/exits via student QR.
+- **Overstay Monitoring**: Automated alerts for vehicles inside the campus for >12 hours.
+- **Gate Sign Generator**: Built-in tool to print high-quality physical QR signs for campus gates.
 
-### 4. Final Security Audit
-- [ ] Enable **Row Level Security (RLS)** in Supabase for sensitive tables.
+### 4. 🎨 Premium Design System
+- **Theme**: Dark "Security Center" aesthetic with blue/purple accents.
+- **Visuals**: Glassmorphism, smooth animations (Framer Motion), and subtle SVSU logo watermarks.
+- **Favicon**: Custom motorbike + shield icon for a professional browser experience.
 
 ---
 
-## 🛠️ Tech Stack Used
-- **Frontend**: Next.js 15, Framer Motion, Lucide Icons, Sonner.
-- **Backend**: Next.js API Routes, Prisma ORM.
-- **Database/Storage**: Supabase.
-- **Scanning**: html5-qrcode.
+## 🏗️ Technical Progress
+
+### Database (Supabase + Prisma)
+- **Schema**: Updated with `UserVehicleProfile` and `EntryRecord` models.
+- **Performance**: Added `@@index` on `rollNo`, `vehicleNo`, and `profileId` for high-speed lookups.
+- **Integrity**: Enforced `unique` constraints on Roll Numbers to prevent data duplication.
+
+### API Infrastructure
+- **Auth APIs**: Secure endpoints for student login, registration, and password reset.
+- **Profile APIs**: Image processing and Supabase storage integration for mandatory documents.
+- **Dashboard APIs**: Aggregated statistics and filtered records for guard monitoring.
+
+---
+
+## 📋 Pending & Next Steps
+- [ ] **Deployment**: Finalize hosting on Railway/Render as per user preference.
+- [ ] **Email Notifications**: (Optional) Add email alerts for security breaches.
+- [ ] **Guard Management**: Add an Admin dashboard to manage Guard credentials.
+- [ ] **Audit Export**: Enable CSV/PDF export of all entry logs for university records.
+
+---
+
+## 📂 Project Structure (Latest)
+- `/app/student/dashboard`: Secure student portal.
+- `/app/profile`: Multi-step registration & Edit flow.
+- `/app/admin`: Guard management interface.
+- `/app/forgot-password`: Identity-based recovery.
+- `/components`: Reusable UI elements (Captcha, Scanner, Camera).
+- `/api`: Secure server-side logic.
+
+**Last Updated**: 2026-04-28
+**Status**: Stable & Secure
