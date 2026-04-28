@@ -1,0 +1,74 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model UserVehicleProfile {
+  id        String   @id @default(uuid())
+  name      String
+  course    String
+  semester  String
+  rollNo    String   @unique
+  password  String   // Hashed password for security
+  vehicleNo String
+  license   String?
+  rcPhoto   String   // Mandatory RC photo URL
+  idCardFront String // Mandatory ID Card Front
+  idCardBack  String // Mandatory ID Card Back
+  lastLogin DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  entries   EntryRecord[]
+
+  @@index([rollNo])
+  @@index([vehicleNo])
+}
+
+
+model EntryRecord {
+  id              String   @id @default(uuid())
+  
+  // Legacy Fields (kept for backward compatibility & direct logging)
+  fullName        String?  @default("")
+  rollNo          String?
+  faculty         String?  @default("")
+  course          String?
+  semester        String?  @default("")
+  vehicleNo       String?  // Shared field
+  photoUrl        String?  // Legacy photo field
+  
+  // Profile Linkage
+  profileId       String?  // Link to permanent user
+  profile         UserVehicleProfile? @relation(fields: [profileId], references: [id])
+  
+  // Temporary Visitor Specifics
+  visitorName     String?
+  visitorPurpose  String?
+  visitorContact  String?
+  visitorPhoto    String?
+  
+  entryTime       DateTime @default(now())
+  exitTime        DateTime?
+  isTemporary     Boolean  @default(false)
+
+  @@index([profileId])
+  @@index([isTemporary])
+  @@index([vehicleNo])
+  @@index([rollNo])
+}
+
+
+
+model User {
+  id       String @id @default(uuid())
+  username String @unique
+  password String
+  role     String @default("GUARD") // GUARD or ADMIN
+}
+

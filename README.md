@@ -57,7 +57,7 @@ A high-performance, premium QR-based vehicle management system designed for **SV
    DATABASE_URL="your_supabase_url"
    JWT_SECRET="your_secret"
    NEXT_PUBLIC_SUPABASE_URL="your_supabase_url"
-   NEXT_PUBLIC_SUPABASE_ANON_KEY="your_anon_key"
+   NEXT_PUBLIC_SUPABASE_ANON_KEY="your_anon_key"   
    ```
 
 4. **Sync Database:**
