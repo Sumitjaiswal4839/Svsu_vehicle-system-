@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         type: 'ENTRY',
         fullName: entry.profile?.name || entry.fullName || 'N/A',
         rollNo: entry.profile?.rollNo || entry.rollNo || 'N/A',
-        faculty: entry.profile?.course || entry.faculty || 'N/A',
+        faculty: entry.profile?.faculty || entry.faculty || 'N/A',
         course: entry.profile?.course || entry.course || 'N/A',
         semester: entry.profile?.semester || entry.semester || 'N/A',
         vehicleNo: entry.profile?.vehicleNo || entry.vehicleNo || 'N/A',

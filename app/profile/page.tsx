@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   User, 
@@ -23,7 +23,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 
-export default function StudentProfilePage() {
+function ProfileContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isNew = searchParams.get('new') === 'true';
@@ -38,15 +38,18 @@ export default function StudentProfilePage() {
     name: '',
     course: '',
     semester: '',
+    faculty: '',
     rollNo: '',
     password: '',
     vehicleNo: '',
     license: '',
     rcPhoto: '',
     idCardFront: '',
-    idCardBack: ''
+    idCardBack: '',
+    profilePhoto: ''
   });
 
+  const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [rcPreview, setRcPreview] = useState<string | null>(null);
   const [idFrontPreview, setIdFrontPreview] = useState<string | null>(null);
   const [idBackPreview, setIdBackPreview] = useState<string | null>(null);
@@ -66,17 +69,20 @@ export default function StudentProfilePage() {
                 name: data.name,
                 course: data.course,
                 semester: data.semester,
+                faculty: data.faculty || '',
                 rollNo: data.rollNo,
                 password: '', // Don't pre-fill password for security
                 vehicleNo: data.vehicleNo,
                 license: data.license || '',
                 rcPhoto: data.rcPhoto,
                 idCardFront: data.idCardFront,
-                idCardBack: data.idCardBack
+                idCardBack: data.idCardBack,
+                profilePhoto: data.profilePhoto || ''
               });
               setRcPreview(data.rcPhoto);
               setIdFrontPreview(data.idCardFront);
               setIdBackPreview(data.idCardBack);
+              setProfilePreview(data.profilePhoto || null);
               setStep(1);
             } else {
               router.push('/student/dashboard');
@@ -100,8 +106,8 @@ export default function StudentProfilePage() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.rollNo || !formData.vehicleNo || !formData.rcPhoto || !formData.idCardFront || !formData.idCardBack || !formData.password) {
-      toast.error('Please fill all mandatory fields including Password, RC, and ID cards');
+    if (!formData.name || !formData.rollNo || !formData.vehicleNo || !formData.rcPhoto || !formData.idCardFront || !formData.idCardBack || !formData.password || !formData.faculty || !formData.semester || !formData.course || !formData.profilePhoto) {
+      toast.error('Please fill all mandatory fields including Profile Photo');
       return;
     }
 
@@ -213,6 +219,31 @@ export default function StudentProfilePage() {
                   />
                 </div>
 
+                <div className="space-y-4">
+                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Profile Photo (Selfie)</label>
+                  <div className="flex items-center gap-6">
+                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-neutral-800 bg-neutral-950 flex-shrink-0">
+                      {profilePreview ? (
+                        <img src={profilePreview} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <User className="w-8 h-8 text-neutral-800" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <CameraCapture 
+                        facingMode="user"
+                        onCapture={(img) => {
+                          setProfilePreview(img);
+                          setFormData(prev => ({ ...prev, profilePhoto: img }));
+                        }} 
+                      />
+                      <p className="text-[10px] text-neutral-500 mt-2 italic">* Required for security verification</p>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Roll Number</label>
@@ -241,14 +272,46 @@ export default function StudentProfilePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Course</label>
-                  <input
-                    name="course"
-                    value={formData.course}
+                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Faculty</label>
+                  <select
+                    name="faculty"
+                    value={formData.faculty}
                     onChange={handleChange}
-                    placeholder="B.Tech CS"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
-                  />
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
+                  >
+                    <option value="">Select Faculty</option>
+                    <option value="Skill Faculty of Engineering & Technology">Skill Faculty of Engineering & Technology</option>
+                    <option value="Skill Faculty of Applied Sciences & Humanities">Skill Faculty of Applied Sciences & Humanities</option>
+                    <option value="Skill Faculty of Management Studies & Research">Skill Faculty of Management Studies & Research</option>
+                    <option value="Skill Faculty of Agriculture">Skill Faculty of Agriculture</option>
+                  </select>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Course</label>
+                    <input
+                      name="course"
+                      value={formData.course}
+                      onChange={handleChange}
+                      placeholder="B.Tech CS"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Semester</label>
+                    <select
+                      name="semester"
+                      value={formData.semester}
+                      onChange={handleChange}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
+                    >
+                      <option value="">Select Semester</option>
+                      {[1,2,3,4,5,6,7,8].map(sem => (
+                        <option key={sem} value={`${sem}${sem === 1 ? 'st' : sem === 2 ? 'nd' : sem === 3 ? 'rd' : 'th'}`}>{sem}{sem === 1 ? 'st' : sem === 2 ? 'nd' : sem === 3 ? 'rd' : 'th'} Sem</option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <button
@@ -276,7 +339,7 @@ export default function StudentProfilePage() {
                 </div>
                 <div>
                   <h1 className="text-2xl font-black">Vehicle Verification</h1>
-                  <p className="text-neutral-500 text-xs uppercase tracking-widest font-bold">Step 2 of 2</p>
+                  <p className="text-neutral-500 text-xs uppercase tracking-widest font-bold">Step 2 of 3</p>
                 </div>
               </div>
 
@@ -296,10 +359,13 @@ export default function StudentProfilePage() {
                   <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">RC Photo (Mandatory)</label>
                   {!rcPreview ? (
                     <div className="bg-neutral-950 border border-neutral-800 rounded-[2rem] p-4">
-                      <CameraCapture onCapture={(img) => {
-                        setRcPreview(img);
-                        setFormData(prev => ({ ...prev, rcPhoto: img }));
-                      }} />
+                      <CameraCapture 
+                        facingMode="environment"
+                        onCapture={(img) => {
+                          setRcPreview(img);
+                          setFormData(prev => ({ ...prev, rcPhoto: img }));
+                        }} 
+                      />
                     </div>
                   ) : (
                     <div className="relative group">
@@ -350,10 +416,13 @@ export default function StudentProfilePage() {
                   <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">College ID Card (Front)</label>
                   {!idFrontPreview ? (
                     <div className="bg-neutral-950 border border-neutral-800 rounded-[2rem] p-4">
-                      <CameraCapture onCapture={(img) => {
-                        setIdFrontPreview(img);
-                        setFormData(prev => ({ ...prev, idCardFront: img }));
-                      }} />
+                      <CameraCapture 
+                        facingMode="environment"
+                        onCapture={(img) => {
+                          setIdFrontPreview(img);
+                          setFormData(prev => ({ ...prev, idCardFront: img }));
+                        }} 
+                      />
                     </div>
                   ) : (
                     <div className="relative group">
@@ -370,10 +439,13 @@ export default function StudentProfilePage() {
                   <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">College ID Card (Back)</label>
                   {!idBackPreview ? (
                     <div className="bg-neutral-950 border border-neutral-800 rounded-[2rem] p-4">
-                      <CameraCapture onCapture={(img) => {
-                        setIdBackPreview(img);
-                        setFormData(prev => ({ ...prev, idCardBack: img }));
-                      }} />
+                      <CameraCapture 
+                        facingMode="environment"
+                        onCapture={(img) => {
+                          setIdBackPreview(img);
+                          setFormData(prev => ({ ...prev, idCardBack: img }));
+                        }} 
+                      />
                     </div>
                   ) : (
                     <div className="relative group">
@@ -400,16 +472,20 @@ export default function StudentProfilePage() {
             </motion.div>
           )}
 
-          {step === 3 && profile && (
+          {step === 0 && profile && (
             <motion.div
-              key="step3"
+              key="step0"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               className="bg-neutral-900/40 border border-neutral-800 p-10 rounded-[3rem] backdrop-blur-2xl shadow-2xl text-center"
             >
               <div className="flex flex-col items-center mb-8">
-                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 border border-green-500/30">
-                  <CheckCircle2 className="w-10 h-10 text-green-500" />
+                <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 border border-green-500/30 overflow-hidden relative">
+                  {profile?.profilePhoto ? (
+                    <img src={profile.profilePhoto} alt="Profile" className="w-full h-full object-cover" />
+                  ) : (
+                    <CheckCircle2 className="w-10 h-10 text-green-500" />
+                  )}
                 </div>
                 <h1 className="text-3xl font-black mb-2">Gate Pass Active</h1>
                 <p className="text-neutral-500 text-sm">Welcome, {profile.name}</p>
@@ -454,5 +530,17 @@ export default function StudentProfilePage() {
         </AnimatePresence>
       </div>
     </main>
+  );
+}
+export default function StudentProfilePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-[#0a0a0c] flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-accent animate-spin mb-4" />
+        <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs">Loading Security Portal...</p>
+      </div>
+    }>
+      <ProfileContent />
+    </Suspense>
   );
 }

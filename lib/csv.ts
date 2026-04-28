@@ -18,6 +18,7 @@ export async function logToCSV(data: {
     fs.mkdirSync(LOG_DIR, { recursive: true });
   }
 
+  const isNewFile = !fs.existsSync(CSV_PATH);
   const header = 'Type,FullName,RollNo,Faculty,Course,Semester,VehicleNo,Timestamp\n';
   const row = `${data.type},"${data.fullName}","${data.rollNo}","${data.faculty}","${data.course}","${data.semester}","${data.vehicleNo}",${data.timestamp}\n`;
 

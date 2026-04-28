@@ -17,18 +17,21 @@ export async function POST(request: Request) {
       password,
       vehicleNo, 
       license, 
+      faculty,
       rcPhoto,
       idCardFront,
-      idCardBack
+      idCardBack,
+      profilePhoto
     } = body;
 
-    if (!name || !rollNo || !vehicleNo || !rcPhoto || !idCardFront || !idCardBack || !password) {
-      return NextResponse.json({ error: 'Missing required fields (Name, Roll No, Vehicle No, RC, ID Cards, Password)' }, { status: 400 });
+    if (!name || !rollNo || !vehicleNo || !rcPhoto || !idCardFront || !idCardBack || !password || !faculty || !profilePhoto) {
+      return NextResponse.json({ error: 'Missing required fields (Name, Roll No, Faculty, Vehicle No, RC, ID Cards, Profile Photo, Password)' }, { status: 400 });
     }
 
     let rcPhotoUrl = rcPhoto;
     let idFrontUrl = idCardFront;
     let idBackUrl = idCardBack;
+    let profilePhotoUrl = profilePhoto;
 
     // Handle photo uploads
     if (rcPhoto && rcPhoto.startsWith('data:image')) {
@@ -39,6 +42,9 @@ export async function POST(request: Request) {
     }
     if (idCardBack && idCardBack.startsWith('data:image')) {
       idBackUrl = await uploadPhoto(idCardBack, `id-back-${rollNo}-${Date.now()}`);
+    }
+    if (profilePhoto && profilePhoto.startsWith('data:image')) {
+      profilePhotoUrl = await uploadPhoto(profilePhoto, `profile-${rollNo}-${Date.now()}`);
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -74,9 +80,11 @@ export async function POST(request: Request) {
         password: hashedPassword,
         vehicleNo,
         license,
+        faculty,
         rcPhoto: rcPhotoUrl,
         idCardFront: idFrontUrl,
         idCardBack: idBackUrl,
+        profilePhoto: profilePhotoUrl,
       },
       create: {
         name,
@@ -86,9 +94,11 @@ export async function POST(request: Request) {
         password: hashedPassword,
         vehicleNo,
         license,
+        faculty,
         rcPhoto: rcPhotoUrl,
         idCardFront: idFrontUrl,
         idCardBack: idBackUrl,
+        profilePhoto: profilePhotoUrl,
       },
     });
 

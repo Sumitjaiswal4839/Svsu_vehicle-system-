@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider  = "postgresql"
 }
 
 model UserVehicleProfile {
@@ -14,6 +14,7 @@ model UserVehicleProfile {
   name      String
   course    String
   semester  String
+  faculty   String?  // Faculty name
   rollNo    String   @unique
   password  String   // Hashed password for security
   vehicleNo String
@@ -21,6 +22,7 @@ model UserVehicleProfile {
   rcPhoto   String   // Mandatory RC photo URL
   idCardFront String // Mandatory ID Card Front
   idCardBack  String // Mandatory ID Card Back
+  profilePhoto String? // Optional profile photo
   lastLogin DateTime @default(now())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
