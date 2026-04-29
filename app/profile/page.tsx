@@ -516,11 +516,11 @@ function ProfileContent() {
                   Save to Device
                 </button>
                 <button
-                  onClick={() => {
-                    document.cookie = "student_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-                    router.push('/student-login');
+                  onClick={async () => {
+                    await fetch('/api/auth/logout', { method: 'POST' });
+                    window.location.href = '/student-login';
                   }}
-                  className="w-full text-red-500 text-xs font-bold uppercase tracking-widest transition-colors py-2"
+                  className="w-full text-red-500 text-[10px] font-black uppercase tracking-widest transition-colors py-4 hover:bg-red-500/5 rounded-xl mt-2"
                 >
                   Logout Securely
                 </button>

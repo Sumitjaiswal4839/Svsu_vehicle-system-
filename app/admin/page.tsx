@@ -69,13 +69,25 @@ export default function GuardDashboard() {
     try {
       const res = await fetch(`/api/dashboard?search=${encodeURIComponent(currentSearch)}`);
       const json = await res.json();
-      if (!res.ok) throw new Error(json?.error || 'Failed to load dashboard data');
+      if (!res.ok) {
+        if (res.status === 401) window.location.href = '/login';
+        throw new Error(json?.error || 'Failed to load dashboard data');
+      }
       setData(json);
     } catch (err) {
       console.error(err);
       toast.error('Could not sync dashboard data');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      window.location.href = '/login';
+    } catch (err) {
+      toast.error('Logout failed');
     }
   };
 
@@ -205,18 +217,18 @@ export default function GuardDashboard() {
 
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Top Header */}
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pt-16 lg:pt-0">
           <div className="flex items-center gap-4">
             <div className="p-3 bg-accent/20 rounded-2xl border border-accent/30 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-              <Shield className="w-8 h-8 text-accent" />
+              <Shield className="w-6 h-6 md:w-8 md:h-8 text-accent" />
             </div>
             <div>
-              <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
-                Guard Control Center
+              <h1 className="text-2xl md:text-3xl font-black tracking-tighter bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent leading-none">
+                Guard Console
               </h1>
-              <div className="flex items-center gap-2 text-neutral-500 text-sm">
+              <div className="flex items-center gap-2 text-neutral-500 text-[10px] md:text-sm font-bold uppercase mt-1">
                 <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                Live Security Feed • SVSU Campus
+                Live Security Feed
               </div>
             </div>
           </div>
@@ -224,37 +236,34 @@ export default function GuardDashboard() {
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <button 
               onClick={() => setIsScannerOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-2xl font-bold hover:opacity-90 shadow-lg shadow-accent/20 transition-all"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 shadow-xl shadow-accent/20 transition-all"
             >
-              <QrCode className="w-5 h-5" />
-              Quick Scan
+              <QrCode className="w-4 h-4" />
+              Scan QR
             </button>
 
             <Link
               href="/admin/gate-qr"
-              className="flex items-center gap-2 px-6 py-3 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-bold hover:bg-neutral-800 hover:text-white transition-all"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-800 hover:text-white transition-all"
             >
-              <Printer className="w-5 h-5" />
-              Print Signs
+              <Printer className="w-4 h-4" />
+              Signs
             </Link>
 
 
-            <div className="relative flex-1 lg:flex-none">
+            <div className="relative flex-1 lg:flex-none min-w-0">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
               <input 
                 type="text" 
-                placeholder="Search vehicles, names..."
+                placeholder="Search..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full lg:w-64 bg-neutral-900/50 border border-neutral-800 rounded-2xl pl-11 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all backdrop-blur-md"
+                className="w-full lg:w-64 bg-neutral-900/50 border border-neutral-800 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all backdrop-blur-md text-sm"
               />
             </div>
             <button 
-              onClick={() => {
-                document.cookie = "auth_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-                window.location.href = '/login';
-              }}
-              className="p-3 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-red-500/10 hover:border-red-500/30 text-neutral-400 hover:text-red-500 transition-all group"
+              onClick={handleLogout}
+              className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-red-500/10 hover:border-red-500/30 text-neutral-400 hover:text-red-500 transition-all group"
             >
               <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
             </button>
