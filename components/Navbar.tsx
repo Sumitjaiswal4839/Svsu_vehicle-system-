@@ -88,9 +88,9 @@ export default function Navbar() {
       <AnimatePresence>
         {isAdminUnlocked && (
           <motion.div
-            initial={{ opacity: 0, w: 0 }}
-            animate={{ opacity: 1, w: 'auto' }}
-            exit={{ opacity: 0, w: 0 }}
+            initial={{ opacity: 0, width: 0 }}
+            animate={{ opacity: 1, width: 'auto' }}
+            exit={{ opacity: 0, width: 0 }}
           >
             <Link 
               href="/admin/dashboard" 
