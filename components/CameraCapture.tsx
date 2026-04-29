@@ -14,13 +14,21 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
   const [isCameraOpen, setIsCameraOpen] = useState(false);
 
   useEffect(() => {
-    if (stream && videoRef.current) {
+    if (isCameraOpen && stream && videoRef.current) {
       videoRef.current.srcObject = stream;
-      videoRef.current.onloadedmetadata = () => {
-        videoRef.current?.play().catch(e => console.error("Video play failed:", e));
+      // Some browsers need explicit play() call
+      const playVideo = async () => {
+        try {
+          if (videoRef.current) {
+            await videoRef.current.play();
+          }
+        } catch (err) {
+          console.error("Auto-play failed, waiting for user interaction:", err);
+        }
       };
+      playVideo();
     }
-  }, [stream]);
+  }, [isCameraOpen, stream]);
 
   const startCamera = async () => {
     try {

@@ -16,6 +16,7 @@ import { ThemeProvider } from "@/components/ThemeProvider";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Toaster } from "sonner";
 import HiddenTerminal from "@/components/HiddenTerminal";
+import Navbar from "@/components/Navbar";
 
 export const metadata: Metadata = {
   title: "SVSU Vehicle Info | Entry-Exit System",
@@ -40,6 +41,7 @@ export default function RootLayout({
         <div className="watermark" />
         <ThemeProvider>
           <Toaster position="top-right" richColors />
+          <Navbar />
           <HiddenTerminal />
           {children}
         </ThemeProvider>

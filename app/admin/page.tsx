@@ -18,7 +18,12 @@ import {
   MapPin,
   Calendar,
   QrCode,
-  Printer
+  Printer,
+  CheckCircle,
+  X,
+  User,
+  ShieldCheck,
+  Smartphone
 } from 'lucide-react';
 
 
@@ -56,6 +61,9 @@ export default function GuardDashboard() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [verifyingProfile, setVerifyingProfile] = useState<any>(null);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [lastActivityCount, setLastActivityCount] = useState(0);
 
   const fetchData = async (currentSearch: string) => {
     try {
@@ -72,17 +80,81 @@ export default function GuardDashboard() {
   };
 
   const handleScanSuccess = async (decodedText: string) => {
-    // Process the scanned text (URL or ID)
-    toast.success('Processing Scanned Data...');
-    // Logic to handle auto-exit or entry can go here
-    fetchData(search);
+    setIsScannerOpen(false);
+    setIsVerifying(true);
+    toast.info('Verifying Student Identity...');
+
+    try {
+      // Extract ID from URL if it's a URL
+      let profileId = decodedText;
+      if (decodedText.includes('?p=')) {
+        profileId = decodedText.split('?p=')[1];
+      }
+
+      const res = await fetch(`/api/admin/verify?id=${profileId}`);
+      const profile = await res.json();
+
+      if (res.ok) {
+        setVerifyingProfile(profile);
+      } else {
+        toast.error(profile.error || 'Student not found');
+      }
+    } catch (err) {
+      toast.error('Verification failed');
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleAuthorizeEntry = async () => {
+    if (!verifyingProfile) return;
+    
+    try {
+      const res = await fetch('/api/entry', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          profileId: verifyingProfile.id,
+          vehicleNo: verifyingProfile.vehicleNo 
+        })
+      });
+      
+      if (res.ok) {
+        toast.success(`Entry Authorized for ${verifyingProfile.name}`);
+        setVerifyingProfile(null);
+        fetchData(search);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Entry failed');
+      }
+    } catch (err) {
+      toast.error('Network error');
+    }
   };
 
   useEffect(() => {
     fetchData(search);
-    const interval = setInterval(() => fetchData(search), 15000); // 15s refresh
+    const interval = setInterval(() => {
+      fetchData(search);
+    }, 5000); // 5s refresh for quick updates
     return () => clearInterval(interval);
   }, [search]);
+
+  // Activity Monitor (Notifications for exits)
+  useEffect(() => {
+    const totalRecords = data.activeVehicles.length + data.exitedVehicles.length;
+    if (lastActivityCount > 0 && totalRecords > lastActivityCount) {
+       // Check if there was a new exit
+       const latestExit = data.exitedVehicles[0];
+       if (latestExit && (new Date().getTime() - new Date(latestExit.exitTime).getTime()) < 10000) {
+         toast(`Vehicle Out: ${latestExit.vehicleNo}`, {
+           icon: '🚗',
+           description: `${latestExit.profile?.name || 'Visitor'} has left the campus.`
+         });
+       }
+    }
+    setLastActivityCount(totalRecords);
+  }, [data]);
 
   const isOverstayed = (entryTime: string) => {
     const entry = new Date(entryTime);
@@ -111,6 +183,21 @@ export default function GuardDashboard() {
         onClose={() => setIsScannerOpen(false)} 
         onScanSuccess={handleScanSuccess} 
       />
+
+      <VerificationModal 
+        profile={verifyingProfile} 
+        onClose={() => setVerifyingProfile(null)} 
+        onAuthorize={handleAuthorizeEntry}
+      />
+
+      {isVerifying && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4">
+            <Smartphone className="w-12 h-12 text-accent animate-bounce" />
+            <p className="text-white font-bold animate-pulse">Scanning Database...</p>
+          </div>
+        </div>
+      )}
 
       {/* Background Glow */}
       <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[150px] -z-10" />
@@ -448,3 +535,90 @@ function RecordCard({ item, type, overstay }: any) {
   );
 }
 
+function VerificationModal({ profile, onClose, onAuthorize }: any) {
+  if (!profile) return null;
+
+  return (
+    <AnimatePresence>
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl">
+        <motion.div
+          initial={{ scale: 0.9, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          exit={{ scale: 0.9, opacity: 0 }}
+          className="w-full max-w-md bg-neutral-900 border-2 border-neutral-800 rounded-[3rem] overflow-hidden shadow-2xl relative"
+        >
+          {/* Header/Vehicle Number */}
+          <div className="bg-accent p-6 text-center">
+            <p className="text-[10px] text-white/60 font-black uppercase tracking-[0.2em] mb-1">Vehicle Verified</p>
+            <h2 className="text-3xl font-black text-white tracking-widest uppercase">{profile.vehicleNo}</h2>
+          </div>
+
+          <div className="p-8 space-y-8">
+            {/* User Photo */}
+            <div className="flex justify-center">
+              <div className="relative group">
+                <div className="absolute inset-0 bg-accent/20 rounded-[2.5rem] blur-2xl group-hover:bg-accent/40 transition-all" />
+                <div className="relative w-48 h-48 rounded-[2.5rem] border-4 border-neutral-800 overflow-hidden bg-neutral-950">
+                  {profile.profilePhoto ? (
+                    <img src={profile.profilePhoto} alt="Student" className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-neutral-800">
+                      <User className="w-20 h-20 text-neutral-600" />
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* User Details */}
+            <div className="bg-neutral-950/50 border border-neutral-800 rounded-3xl p-6 space-y-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-accent/10 rounded-2xl">
+                  <User className="w-5 h-5 text-accent" />
+                </div>
+                <div>
+                  <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Full Name</p>
+                  <p className="text-lg font-black text-white">{profile.name}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Roll Number</p>
+                  <p className="font-bold text-neutral-200">{profile.rollNo}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Semester</p>
+                  <p className="font-bold text-neutral-200">{profile.semester || 'N/A'}</p>
+                </div>
+              </div>
+
+              <div>
+                <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Faculty/Course</p>
+                <p className="text-xs font-bold text-neutral-400 line-clamp-1">{profile.faculty || profile.course}</p>
+              </div>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-3 pt-4">
+              <button
+                onClick={onClose}
+                className="flex-1 py-4 bg-neutral-800 hover:bg-neutral-700 text-white font-bold rounded-2xl transition-all flex items-center justify-center gap-2"
+              >
+                <X className="w-5 h-5" />
+                Cancel
+              </button>
+              <button
+                onClick={onAuthorize}
+                className="flex-[2] py-4 bg-green-600 hover:bg-green-500 text-white font-black rounded-2xl shadow-xl shadow-green-500/20 transition-all flex items-center justify-center gap-2"
+              >
+                <ShieldCheck className="w-5 h-5" />
+                Authorize Entry
+              </button>
+            </div>
+          </div>
+        </motion.div>
+      </div>
+    </AnimatePresence>
+  );
+}

@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5Qrcode } from 'html5-qrcode';
 import { motion, AnimatePresence } from 'framer-motion';
 import { QrCode, X, CheckCircle2, AlertCircle, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
@@ -15,49 +15,58 @@ interface QRScannerProps {
 export default function QRScanner({ onScanSuccess, isOpen, onClose }: QRScannerProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-  const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const html5QrCodeRef = useRef<Html5Qrcode | null>(null);
 
   useEffect(() => {
     if (isOpen) {
-      // Small delay to ensure the container is rendered
-      const timer = setTimeout(() => {
-        scannerRef.current = new Html5QrcodeScanner(
-          "reader",
-          { 
+      const startScanner = async () => {
+        try {
+          const html5QrCode = new Html5Qrcode("reader");
+          html5QrCodeRef.current = html5QrCode;
+
+          const config = { 
             fps: 10, 
             qrbox: { width: 250, height: 250 },
-            aspectRatio: 1.0
-          },
-          /* verbose= */ false
-        );
+            aspectRatio: 1.0 
+          };
 
-        scannerRef.current.render(
-          (decodedText) => {
-            setSuccess(decodedText);
-            onScanSuccess(decodedText);
-            // Auto-close after success
-            setTimeout(() => {
-              handleClose();
-            }, 1500);
-          },
-          (errorMessage) => {
-            // Silently ignore errors during scanning unless they are critical
-          }
-        );
-      }, 300);
+          await html5QrCode.start(
+            { facingMode: "environment" }, 
+            config,
+            (decodedText) => {
+              setSuccess(decodedText);
+              onScanSuccess(decodedText);
+              setTimeout(() => handleClose(), 1500);
+            },
+            (errorMessage) => {
+              // Scanning...
+            }
+          );
+        } catch (err) {
+          console.error("Scanner start error:", err);
+          setError("Could not access camera. Please ensure permissions are granted.");
+        }
+      };
+
+      // Slight delay to ensure DOM is ready
+      const timer = setTimeout(startScanner, 500);
 
       return () => {
-        if (scannerRef.current) {
-          scannerRef.current.clear().catch(e => console.error("Failed to clear scanner", e));
-        }
         clearTimeout(timer);
+        if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+          html5QrCodeRef.current.stop().catch(e => console.error("Failed to stop scanner", e));
+        }
       };
     }
   }, [isOpen]);
 
-  const handleClose = () => {
-    if (scannerRef.current) {
-      scannerRef.current.clear().catch(e => console.error("Failed to clear scanner", e));
+  const handleClose = async () => {
+    if (html5QrCodeRef.current && html5QrCodeRef.current.isScanning) {
+      try {
+        await html5QrCodeRef.current.stop();
+      } catch (e) {
+        console.error("Stop failed", e);
+      }
     }
     setSuccess(null);
     setError(null);

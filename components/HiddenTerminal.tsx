@@ -54,6 +54,11 @@ export default function HiddenTerminal() {
 
         if (res.ok) {
           setHistory(prev => [...prev, '> siteadmin', 'Access Granted. Redirecting to Admin Core...']);
+          
+          // Dispatch event for Navbar
+          window.dispatchEvent(new Event('admin-unlocked'));
+          sessionStorage.setItem('admin_unlocked', 'true');
+
           setTimeout(() => {
             setIsOpen(false);
             router.push('/admin/dashboard');
