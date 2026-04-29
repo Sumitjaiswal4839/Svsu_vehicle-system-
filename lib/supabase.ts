@@ -11,7 +11,7 @@ export async function uploadPhoto(base64: string, fileName: string) {
   const buffer = Buffer.from(base64Data, 'base64');
 
   const { data, error } = await supabase.storage
-    .from('vehicle-photos') // Make sure this bucket exists in Supabase
+    .from('vehicle-photos') 
     .upload(`photos/${fileName}.jpg`, buffer, {
       contentType: 'image/jpeg',
       upsert: true,

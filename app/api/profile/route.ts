@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { uploadPhoto } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
 
@@ -24,8 +25,9 @@ export async function POST(request: Request) {
       profilePhoto
     } = body;
 
+    // Validation
     if (!name || !rollNo || !vehicleNo || !rcPhoto || !idCardFront || !idCardBack || !password || !faculty || !profilePhoto) {
-      return NextResponse.json({ error: 'Missing required fields (Name, Roll No, Faculty, Vehicle No, RC, ID Cards, Profile Photo, Password)' }, { status: 400 });
+      return NextResponse.json({ error: 'Missing mandatory fields. Ensure all photos are captured.' }, { status: 400 });
     }
 
     let rcPhotoUrl = rcPhoto;
@@ -33,30 +35,34 @@ export async function POST(request: Request) {
     let idBackUrl = idCardBack;
     let profilePhotoUrl = profilePhoto;
 
-    // Handle photo uploads
-    if (rcPhoto && rcPhoto.startsWith('data:image')) {
-      rcPhotoUrl = await uploadPhoto(rcPhoto, `rc-${rollNo}-${Date.now()}`);
-    }
-    if (idCardFront && idCardFront.startsWith('data:image')) {
-      idFrontUrl = await uploadPhoto(idCardFront, `id-front-${rollNo}-${Date.now()}`);
-    }
-    if (idCardBack && idCardBack.startsWith('data:image')) {
-      idBackUrl = await uploadPhoto(idCardBack, `id-back-${rollNo}-${Date.now()}`);
-    }
-    if (profilePhoto && profilePhoto.startsWith('data:image')) {
-      profilePhotoUrl = await uploadPhoto(profilePhoto, `profile-${rollNo}-${Date.now()}`);
+    // Handle photo uploads with better error reporting
+    try {
+      if (rcPhoto?.startsWith('data:image')) {
+        rcPhotoUrl = await uploadPhoto(rcPhoto, `rc-${rollNo}-${Date.now()}`);
+      }
+      if (idCardFront?.startsWith('data:image')) {
+        idFrontUrl = await uploadPhoto(idCardFront, `id-front-${rollNo}-${Date.now()}`);
+      }
+      if (idCardBack?.startsWith('data:image')) {
+        idBackUrl = await uploadPhoto(idCardBack, `id-back-${rollNo}-${Date.now()}`);
+      }
+      if (profilePhoto?.startsWith('data:image')) {
+        profilePhotoUrl = await uploadPhoto(profilePhoto, `profile-${rollNo}-${Date.now()}`);
+      }
+    } catch (uploadError: any) {
+      console.error('Supabase Upload Error:', uploadError);
+      return NextResponse.json({ 
+        error: `Photo Upload Failed: ${uploadError.message || 'Check if "vehicle-photos" bucket exists in Supabase'}` 
+      }, { status: 500 });
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Check if user is already registered
-    const existing = await prisma.userVehicleProfile.findUnique({
-      where: { rollNo }
-    });
-
-    // Get current session if any
-    const token = (request as any).cookies?.get('student_token')?.value;
+    // Get session securely
+    const cookieStore = await cookies();
+    const token = cookieStore.get('student_token')?.value;
     let currentStudentId = null;
+    
     if (token) {
       try {
         const { payload } = await jwtVerify(token, JWT_SECRET);
@@ -64,14 +70,19 @@ export async function POST(request: Request) {
       } catch (e) {}
     }
 
-    if (existing && existing.id !== currentStudentId) {
+    // Check for collisions
+    const existing = await prisma.userVehicleProfile.findUnique({
+      where: { rollNo }
+    });
+
+    if (existing && (!currentStudentId || existing.id !== currentStudentId)) {
       return NextResponse.json({ 
-        error: 'This Roll Number is already registered. Please login to your account or use Forgot Password.' 
+        error: 'Roll Number already registered. Please login instead.' 
       }, { status: 409 });
     }
 
+    // Upsert Profile
     const profile = await prisma.userVehicleProfile.upsert({
-
       where: { rollNo },
       update: {
         name,
@@ -102,11 +113,12 @@ export async function POST(request: Request) {
       },
     });
 
-
-    return NextResponse.json({ message: 'Profile registered successfully', profile }, { status: 201 });
-  } catch (error) {
-    console.error('Profile API Error:', error);
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+    return NextResponse.json({ message: 'Success', profile }, { status: 201 });
+  } catch (error: any) {
+    console.error('CRITICAL Profile API Error:', error);
+    return NextResponse.json({ 
+      error: 'Database error. Ensure your connection is stable and try again.' 
+    }, { status: 500 });
   }
 }
 
