@@ -4,16 +4,18 @@ import pg from "pg";
 
 const globalForPrisma = globalThis as unknown as { prisma: PrismaClient };
 
-const rawConnectionString = process.env.DATABASE_URL;
+const connectionString = process.env.DATABASE_URL;
 
-if (!rawConnectionString) {
+if (!connectionString) {
   throw new Error("DATABASE_URL is not set");
 }
 
 const pool = new pg.Pool({
-  connectionString: rawConnectionString,
+  connectionString,
   ssl: { rejectUnauthorized: false },
+  max: 1, // Important for serverless — limits concurrent connections
 });
+
 const adapter = new PrismaPg(pool);
 
 export const prisma =

@@ -1,25 +1,25 @@
-const pg = require('pg');
+const { Client } = require('pg');
 require('dotenv').config();
 
-async function test() {
-  const rawUrl = process.env.DATABASE_URL;
-  // Simple string replace to remove sslmode but keep the rest exactly as is
-  const connectionString = rawUrl.split('?')[0]; 
-  
-  console.log('Testing raw string connection (no params)...');
-  const pool = new pg.Pool({
-    connectionString,
-    ssl: { rejectUnauthorized: false },
-  });
+const client = new Client({
+  connectionString: process.env.DATABASE_URL,
+  ssl: { rejectUnauthorized: false }
+});
 
+async function testConnection() {
   try {
-    const res = await pool.query('SELECT NOW()');
-    console.log('Connection Successful!', res.rows[0]);
+    console.log('Attempting to connect to:', process.env.DATABASE_URL.split('@')[1]);
+    await client.connect();
+    console.log('Connected successfully!');
+    const res = await client.query('SELECT NOW()');
+    console.log('Query result:', res.rows[0]);
+    await client.end();
   } catch (err) {
-    console.error('Connection Failed:', err.message);
-  } finally {
-    await pool.end();
+    console.error('Connection failed:', err.message);
+    if (err.message.includes('ETIMEDOUT') || err.message.includes('ENOTFOUND')) {
+      console.log('Possible reasons: Database is paused, wrong host, or network restriction.');
+    }
   }
 }
 
-test();
+testConnection();
