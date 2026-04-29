@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Shield, Car, Users, User, LayoutDashboard, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
