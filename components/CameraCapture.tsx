@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState, useCallback } from 'react';
+import { useRef, useState, useCallback, useEffect } from 'react';
 
 interface CameraCaptureProps {
   onCapture: (base64Image: string) => void;
@@ -12,6 +12,15 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [isCameraOpen, setIsCameraOpen] = useState(false);
+
+  useEffect(() => {
+    if (stream && videoRef.current) {
+      videoRef.current.srcObject = stream;
+      videoRef.current.onloadedmetadata = () => {
+        videoRef.current?.play().catch(e => console.error("Video play failed:", e));
+      };
+    }
+  }, [stream]);
 
   const startCamera = async () => {
     try {
@@ -29,21 +38,6 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
       });
       
       setStream(mediaStream);
-      if (videoRef.current) {
-        videoRef.current.srcObject = mediaStream;
-        // Explicitly set muted to help with autoplay policies
-        videoRef.current.muted = true;
-        
-        // Wait for video to be ready before playing
-        videoRef.current.onloadedmetadata = async () => {
-          try {
-            await videoRef.current?.play();
-            console.log('Camera started successfully');
-          } catch (e) {
-            console.error("Video play failed:", e);
-          }
-        };
-      }
       setIsCameraOpen(true);
     } catch (err) {
       console.error('Error accessing camera:', err);
@@ -64,9 +58,9 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
       const video = videoRef.current;
       const canvas = canvasRef.current;
       
-      // Safety check for blank image
-      if (video.videoWidth === 0 || video.videoHeight === 0) {
-        alert('Camera is not ready yet. Please try again in a second.');
+      // Safety check for ready state and dimensions
+      if (video.readyState < 2 || video.videoWidth === 0 || video.videoHeight === 0) {
+        alert('Camera is initializing... Please wait a moment.');
         return;
       }
 
@@ -74,8 +68,14 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
       canvas.height = video.videoHeight;
       const ctx = canvas.getContext('2d');
       if (ctx) {
+        // Clear canvas first
+        ctx.fillStyle = "#000";
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw video frame
         ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        const base64 = canvas.toDataURL('image/jpeg', 0.8); // 0.8 quality for better compression
+        
+        const base64 = canvas.toDataURL('image/jpeg', 0.9);
         onCapture(base64);
         stopCamera();
       }
