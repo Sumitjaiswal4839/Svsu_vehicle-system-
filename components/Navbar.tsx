@@ -6,6 +6,7 @@ import { Home, User, Shield, LogOut, ChevronRight, LayoutDashboard } from 'lucid
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { toast } from 'sonner';
+import Logo from './Logo';
 
 export default function Navbar() {
   const router = useRouter();
@@ -57,7 +58,10 @@ export default function Navbar() {
   };
 
   return (
-    <nav className="fixed top-4 right-4 md:top-8 md:right-8 z-50 flex items-center gap-2 p-1.5 bg-neutral-900/60 backdrop-blur-3xl border border-white/5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all">
+    <div className="fixed top-4 left-0 right-0 z-50 flex items-center justify-between px-4 md:px-8 pointer-events-none">
+      <Logo className="pointer-events-auto bg-neutral-900/40 p-2 rounded-2xl backdrop-blur-md border border-white/5" />
+      
+      <nav className="pointer-events-auto flex items-center gap-2 p-1.5 bg-neutral-900/60 backdrop-blur-3xl border border-white/5 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.5)] transition-all">
       <Link 
         href="/" 
         className={`p-2.5 rounded-xl transition-all ${pathname === '/' ? 'bg-accent text-white shadow-lg shadow-accent/20' : 'text-neutral-400 hover:text-white hover:bg-white/5'}`}
@@ -119,6 +123,7 @@ export default function Navbar() {
           </button>
         </div>
       )}
-    </nav>
+      </nav>
+    </div>
   );
 }

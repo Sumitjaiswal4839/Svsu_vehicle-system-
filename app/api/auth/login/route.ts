@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { logAudit } from '@/lib/audit';
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
@@ -52,8 +52,11 @@ export async function POST(request: Request) {
       .sign(JWT_SECRET);
 
     const cookieStore = await cookies();
+    const headersList = await headers();
+    const userAgent = headersList.get('user-agent') || 'Unknown';
+    const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
     
-    // Access Token
+    // Set Cookies
     cookieStore.set('auth_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -62,7 +65,6 @@ export async function POST(request: Request) {
       path: '/',
     });
 
-    // Refresh Token
     cookieStore.set('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -81,12 +83,23 @@ export async function POST(request: Request) {
       });
     }
 
+    // Save Session to Database for tracking and remote logout
+    await prisma.session.create({
+      data: {
+        userId: user.id,
+        token: accessToken,
+        ipAddress: ip,
+        userAgent: userAgent,
+        expiresAt: new Date(Date.now() + 15 * 60 * 1000),
+      }
+    });
+
     // Audit Log
     await logAudit({
       userId: user.id,
       action: 'LOGIN',
-      resource: `User: ${user.username}`,
-      metadata: { role: user.role }
+      resource: `User: ${user.username} | Device: ${userAgent}`,
+      metadata: { role: user.role, ip }
     });
 
     return NextResponse.json({ message: 'Login successful', role: user.role });

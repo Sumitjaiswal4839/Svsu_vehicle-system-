@@ -21,6 +21,7 @@ import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import QRScanner from '@/components/QRScanner';
+import Logo from '@/components/Logo';
 
 export default function StudentDashboard() {
   const router = useRouter();
@@ -165,15 +166,14 @@ export default function StudentDashboard() {
       <div className="max-w-6xl mx-auto">
         {/* Header */}
         <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div className="flex items-center gap-5">
-            <div className="p-4 bg-accent/20 rounded-3xl border border-accent/30 shadow-[0_0_30px_rgba(37,99,235,0.2)]">
-              <User className="w-8 h-8 text-accent" />
-            </div>
+          <div className="flex items-center gap-6">
+            <Logo className="scale-110 origin-left" />
+            <div className="w-[1px] h-10 bg-white/10 hidden md:block" />
             <div>
-              <h1 className="text-3xl font-black tracking-tight">Student Dashboard</h1>
+              <h1 className="text-3xl font-black tracking-tight">Student Portal</h1>
               <div className="flex items-center gap-2 text-neutral-500 text-sm font-medium mt-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full" />
-                Active Session • Verified Identity
+                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                System Active • Secure Access
               </div>
             </div>
           </div>

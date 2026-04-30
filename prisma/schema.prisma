@@ -73,7 +73,22 @@ model User {
   password     String
   role         String  @default("GUARD") // GUARD or ADMIN
   isAuthorized Boolean @default(false)
+  sessions     Session[]
   auditLogs    AuditLog[]
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  token     String   @unique
+  ipAddress String?
+  userAgent String?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
 }
 
 model AuditLog {
