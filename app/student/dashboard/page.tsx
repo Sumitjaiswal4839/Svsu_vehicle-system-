@@ -20,11 +20,14 @@ import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import QRScanner from '@/components/QRScanner';
 
 export default function StudentDashboard() {
   const router = useRouter();
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -88,6 +91,43 @@ export default function StudentDashboard() {
     img.src = 'data:image/svg+xml;base64,' + btoa(svgData);
   };
 
+  const handleScanSuccess = async (decodedText: string) => {
+    setIsScannerOpen(false);
+    if (decodedText !== "SVSU_GATE_ENTRY" && decodedText !== "SVSU_GATE_EXIT") {
+      toast.error("Invalid Gate QR Code. Please scan the official SVSU Gate QR.");
+      return;
+    }
+
+    setProcessing(true);
+    const isEntry = decodedText === "SVSU_GATE_ENTRY";
+    const endpoint = isEntry ? '/api/entry' : '/api/exit';
+
+    try {
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          profileId: profile.id,
+          vehicleNo: profile.vehicleNo 
+        })
+      });
+
+      if (res.ok) {
+        toast.success(isEntry ? "Entry Registered Successfully!" : "Exit Registered Successfully!");
+        // Refresh profile to show new entry in history
+        const updated = await fetch('/api/profile').then(r => r.json());
+        setProfile(updated);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || "Action Failed");
+      }
+    } catch (err) {
+      toast.error("Connection Error");
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-[#0a0a0c] flex flex-col items-center justify-center space-y-4">
@@ -104,6 +144,20 @@ export default function StudentDashboard() {
 
   return (
     <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 relative overflow-hidden">
+      <QRScanner 
+        isOpen={isScannerOpen}
+        onClose={() => setIsScannerOpen(false)}
+        onScanSuccess={handleScanSuccess}
+      />
+
+      {processing && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
+           <div className="flex flex-col items-center gap-4">
+              <Loader2 className="w-12 h-12 text-accent animate-spin" />
+              <p className="text-white font-black uppercase tracking-widest text-xs">Processing Entry...</p>
+           </div>
+        </div>
+      )}
       {/* Background Glow */}
       <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[150px] -z-10" />
       <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-600/5 rounded-full blur-[150px] -z-10" />
@@ -124,13 +178,22 @@ export default function StudentDashboard() {
             </div>
           </div>
 
-          <button 
-            onClick={handleLogout}
-            className="flex items-center gap-2 px-6 py-3 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-bold hover:bg-red-500/10 hover:text-red-500 transition-all group"
-          >
-            <LogOut className="w-4 h-4" />
-            Logout
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsScannerOpen(true)}
+              className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 shadow-xl shadow-accent/20 transition-all"
+            >
+              <QrCode className="w-4 h-4" />
+              Scan Gate QR
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="flex items-center gap-2 px-6 py-3 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-bold hover:bg-red-500/10 hover:text-red-500 transition-all group"
+            >
+              <LogOut className="w-4 h-4" />
+              Logout
+            </button>
+          </div>
         </header>
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

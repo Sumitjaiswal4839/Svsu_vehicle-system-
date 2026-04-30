@@ -6,9 +6,8 @@ import { Download, MapPin, Scan, ArrowLeft, Printer, AlertCircle } from 'lucide-
 import Link from 'next/link';
 
 export default function GateQRPage() {
-  const baseUrl = typeof window !== 'undefined' ? window.location.origin : '';
-  const entryUrl = `${baseUrl}/entry`;
-  const exitUrl = `${baseUrl}/exit`;
+  const entryCode = "SVSU_GATE_ENTRY";
+  const exitCode = "SVSU_GATE_EXIT";
 
   const printPage = () => {
     window.print();
@@ -39,7 +38,7 @@ export default function GateQRPage() {
             </div>
             
             <div className="p-8 border-2 border-blue-100 rounded-[2rem] mb-8">
-              <QRCodeSVG value={entryUrl} size={300} level="H" />
+              <QRCodeSVG value={entryCode} size={300} level="H" />
             </div>
             
             <div className="space-y-4">
@@ -65,7 +64,7 @@ export default function GateQRPage() {
             </div>
             
             <div className="p-8 border-2 border-red-100 rounded-[2rem] mb-8">
-              <QRCodeSVG value={exitUrl} size={300} level="H" />
+              <QRCodeSVG value={exitCode} size={300} level="H" />
             </div>
             
             <div className="space-y-4">
