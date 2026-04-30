@@ -6,6 +6,7 @@ const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-
 
 export async function middleware(request: NextRequest) {
   const authToken = request.cookies.get('auth_token')?.value;
+  const studentToken = request.cookies.get('student_token')?.value;
   const refreshToken = request.cookies.get('refresh_token')?.value;
 
   const { pathname } = request.nextUrl;
@@ -15,6 +16,16 @@ export async function middleware(request: NextRequest) {
   const isProtected = protectedPaths.some(path => pathname.startsWith(path));
 
   if (isProtected) {
+    // If it's a student accessing entry/exit/dashboard, check student_token
+    if (studentToken && (pathname.startsWith('/api/entry') || pathname.startsWith('/api/exit') || pathname.startsWith('/student'))) {
+      try {
+        await jwtVerify(studentToken, JWT_SECRET);
+        return NextResponse.next();
+      } catch (e) {
+        // Token invalid, fall through to login redirect
+      }
+    }
+
     if (!authToken) {
       // Try silent refresh if access token is missing but refresh token exists
       if (refreshToken) {

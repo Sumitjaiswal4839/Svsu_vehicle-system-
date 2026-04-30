@@ -122,9 +122,10 @@ export async function POST(request: Request) {
   }
 }
 
-export async function GET(request: Request) {
+export async function GET() {
   try {
-    const token = (request as any).cookies?.get('student_token')?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get('student_token')?.value;
     
     if (!token) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
