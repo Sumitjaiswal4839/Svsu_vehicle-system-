@@ -3,9 +3,16 @@ import { prisma } from '@/lib/prisma';
 import { logToCSV } from '@/lib/csv';
 import { uploadPhoto } from '@/lib/supabase';
 import { logAudit } from '@/lib/audit';
+import { verifyActiveSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
+    // Verify Session (Force Logout Check)
+    const { isValid } = await verifyActiveSession();
+    if (!isValid) {
+      return NextResponse.json({ error: 'Session expired or terminated. Please login again.' }, { status: 401 });
+    }
+
     const body = await request.json();
     const { 
       profileId, 

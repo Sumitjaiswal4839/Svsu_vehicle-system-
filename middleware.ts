@@ -2,8 +2,6 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
 
-import { prisma } from '@/lib/prisma';
-
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
 
 export async function middleware(request: NextRequest) {
@@ -34,22 +32,7 @@ export async function middleware(request: NextRequest) {
     }
 
     try {
-      const { payload } = await jwtVerify(authToken, JWT_SECRET);
-      
-      // CRITICAL: Verify session still exists in DB (Force Logout Check)
-      // Note: We use a lightweight fetch or DB query here. 
-      // In a real high-traffic app, we'd use Redis, but for enterprise SVSU, Prisma is fine.
-      const activeSession = await prisma.session.findUnique({
-        where: { token: authToken }
-      });
-
-      if (!activeSession) {
-        const response = NextResponse.redirect(new URL('/login', request.url));
-        response.cookies.delete('auth_token');
-        response.cookies.delete('refresh_token');
-        return response;
-      }
-
+      await jwtVerify(authToken, JWT_SECRET);
       return NextResponse.next();
     } catch (error) {
       // If auth token expired, check refresh token

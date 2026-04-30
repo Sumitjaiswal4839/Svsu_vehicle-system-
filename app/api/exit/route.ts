@@ -2,9 +2,16 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logToCSV } from '@/lib/csv';
 import { logAudit } from '@/lib/audit';
+import { verifyActiveSession } from '@/lib/auth';
 
 export async function POST(request: Request) {
   try {
+    // Verify Session (Force Logout Check)
+    const { isValid } = await verifyActiveSession();
+    if (!isValid) {
+      return NextResponse.json({ error: 'Session expired or terminated. Please login again.' }, { status: 401 });
+    }
+
     const { vehicleNo, profileId, entryId } = await request.json();
 
     if (!vehicleNo && !profileId && !entryId) {
