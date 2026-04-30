@@ -5,10 +5,12 @@ import { jwtVerify } from 'jose';
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
 
 export async function logAudit({ 
+  userId,
   action, 
   resource, 
   metadata = {} 
 }: { 
+  userId?: string;
   action: 'LOGIN' | 'ENTRY_AUTH' | 'EXIT_AUTH' | 'VISITOR_ADD' | 'ADMIN_UNLOCK' | 'LOGOUT'; 
   resource?: string; 
   metadata?: any;
@@ -18,8 +20,8 @@ export async function logAudit({
     const cookieStore = await cookies();
     const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
     
-    // Try to find the performer from tokens
-    let performerId = null;
+    // Try to find the performer from tokens if userId is not provided
+    let performerId = userId || null;
     let performerRole = 'ANONYMOUS';
 
     const authToken = cookieStore.get('auth_token')?.value;
