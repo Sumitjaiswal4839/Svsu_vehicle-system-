@@ -55,6 +55,8 @@ const EMPTY_DASHBOARD: DashboardData = {
 
 type TabType = 'active' | 'exited' | 'temporary';
 
+import { convertToCSV, downloadCSV } from '@/lib/export';
+
 export default function GuardDashboard() {
   const [data, setData] = useState<DashboardData>(EMPTY_DASHBOARD);
   const [loading, setLoading] = useState(true);
@@ -76,19 +78,31 @@ export default function GuardDashboard() {
       setData(json);
     } catch (err) {
       console.error(err);
-      toast.error('Could not sync dashboard data');
     } finally {
       setLoading(false);
     }
   };
 
+  const handleExportData = () => {
+    const items = activeTab === 'active' ? data.activeVehicles : activeTab === 'temporary' ? data.temporaryVisitors : data.exitedVehicles;
+    if (items.length === 0) return toast.error('No data to export');
+    
+    const formatted = items.map(item => ({
+      Vehicle: item.vehicleNo || item.profile?.vehicleNo,
+      Name: item.profile?.name || item.visitorName || 'N/A',
+      Roll_No: item.profile?.rollNo || 'N/A',
+      Entry: new Date(item.entryTime).toLocaleString(),
+      Type: item.isTemporary ? 'Visitor' : 'Student'
+    }));
+
+    const csv = convertToCSV(formatted);
+    downloadCSV(csv, `svsu_${activeTab}_records_${new Date().toISOString().split('T')[0]}.csv`);
+    toast.success('Report downloaded');
+  };
+
   const handleLogout = async () => {
-    try {
-      await fetch('/api/auth/logout', { method: 'POST' });
-      window.location.href = '/login';
-    } catch (err) {
-      toast.error('Logout failed');
-    }
+    await fetch('/api/auth/logout', { method: 'POST' });
+    window.location.href = '/login';
   };
 
   const handleScanSuccess = async (decodedText: string) => {
@@ -236,6 +250,7 @@ export default function GuardDashboard() {
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <button 
               onClick={() => setIsScannerOpen(true)}
+              aria-label="Open QR Scanner for Student Identity"
               className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 shadow-xl shadow-accent/20 transition-all"
             >
               <QrCode className="w-4 h-4" />
@@ -251,18 +266,30 @@ export default function GuardDashboard() {
             </Link>
 
 
-            <div className="relative flex-1 lg:flex-none min-w-0">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
-              <input 
-                type="text" 
-                placeholder="Search..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                className="w-full lg:w-64 bg-neutral-900/50 border border-neutral-800 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all backdrop-blur-md text-sm"
-              />
+            <div className="flex items-center gap-2 w-full lg:w-auto">
+              <button 
+                onClick={handleExportData}
+                aria-label="Download Current View as CSV"
+                className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all group"
+                title="Export Logs"
+              >
+                <Download className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
+              </button>
+              <div className="relative flex-1 lg:w-64">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+                <input 
+                  type="text"
+                  placeholder="Search Vehicle / Name..."
+                  value={search}
+                  aria-label="Search vehicles or students by name"
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="w-full bg-neutral-900/50 border border-neutral-800 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all backdrop-blur-md text-sm"
+                />
+              </div>
             </div>
             <button 
               onClick={handleLogout}
+              aria-label="Logout from Guard Dashboard"
               className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-red-500/10 hover:border-red-500/30 text-neutral-400 hover:text-red-500 transition-all group"
             >
               <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />

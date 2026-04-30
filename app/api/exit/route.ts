@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logToCSV } from '@/lib/csv';
+import { logAudit } from '@/lib/audit';
 
 export async function POST(request: Request) {
   try {
@@ -43,6 +44,13 @@ export async function POST(request: Request) {
         isTemporary: true
       });
     }
+
+    // Audit Log for permanent users
+    await logAudit({
+      action: 'EXIT_AUTH',
+      resource: `Vehicle: ${record.vehicleNo || record.profile?.vehicleNo}`,
+      metadata: { recordId: record.id }
+    });
 
     // Mark permanent user as exited
     const updatedRecord = await prisma.entryRecord.update({

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { logToCSV } from '@/lib/csv';
 import { uploadPhoto } from '@/lib/supabase';
+import { logAudit } from '@/lib/audit';
 
 export async function POST(request: Request) {
   try {
@@ -72,6 +73,13 @@ export async function POST(request: Request) {
         timestamp: entry.entryTime.toISOString(),
       });
     }
+
+    // Audit Log
+    await logAudit({
+      action: isTemporary ? 'VISITOR_ADD' : 'ENTRY_AUTH',
+      resource: `Vehicle: ${entry.vehicleNo || entry.profile?.vehicleNo}`,
+      metadata: { entryId: entry.id, type: isTemporary ? 'visitor' : 'student' }
+    });
 
     return NextResponse.json({ message: 'Entry registered successfully', entry }, { status: 201 });
   } catch (error) {
