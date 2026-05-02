@@ -23,7 +23,7 @@
   --foreground: #111827;
   --card: #f9fafb;
   --border: #e5e7eb;
-  --accent: #2563eb;
+  --accent: #373380; /* SVSU Indigo */
 }
 
 .dark {
@@ -31,7 +31,7 @@
   --foreground: #fafafa;
   --card: #18181b;
   --border: #27272a;
-  --accent: #3b82f6;
+  --accent: #5e59b3; /* SVSU Indigo Lighter for dark mode contrast */
 }
 
 @theme inline {

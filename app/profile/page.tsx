@@ -16,7 +16,9 @@ import {
   ShieldCheck,
   GraduationCap,
   Lock,
-  ArrowLeft
+  ArrowLeft,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 import CameraCapture from '@/components/CameraCapture';
 import { QRCodeSVG } from 'qrcode.react';
@@ -53,6 +55,7 @@ function ProfileContent() {
   const [rcPreview, setRcPreview] = useState<string | null>(null);
   const [idFrontPreview, setIdFrontPreview] = useState<string | null>(null);
   const [idBackPreview, setIdBackPreview] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Check if student is logged in
   useEffect(() => {
@@ -179,10 +182,10 @@ function ProfileContent() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 flex items-center justify-center relative overflow-hidden">
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px]" />
+    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative">
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="z-10 w-full max-w-xl">
+      <div className="z-10 w-full max-w-xl my-auto">
         <AnimatePresence mode="wait">
           {step === 1 && (
             <motion.div
@@ -190,7 +193,7 @@ function ProfileContent() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-neutral-900/40 border border-neutral-800 p-8 rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
+              className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
@@ -215,7 +218,7 @@ function ProfileContent() {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="E.g. Sumit Bhardwaj"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                   />
                 </div>
 
@@ -252,7 +255,7 @@ function ProfileContent() {
                       value={formData.rollNo}
                       onChange={handleChange}
                       placeholder="2100..."
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -260,13 +263,20 @@ function ProfileContent() {
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
                       <input
-                        type="password"
+                        type={showPassword ? "text" : "password"}
                         name="password"
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="••••••••"
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                        className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                       />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute right-4 top-1/2 -translate-y-1/2 p-1 text-neutral-500 hover:text-white transition-colors"
+                      >
+                        {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -277,7 +287,7 @@ function ProfileContent() {
                     name="faculty"
                     value={formData.faculty}
                     onChange={handleChange}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
                   >
                     <option value="">Select Faculty</option>
                     <option value="Skill Faculty of Engineering & Technology">Skill Faculty of Engineering & Technology</option>
@@ -295,7 +305,7 @@ function ProfileContent() {
                       value={formData.course}
                       onChange={handleChange}
                       placeholder="B.Tech CS"
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -304,7 +314,7 @@ function ProfileContent() {
                       name="semester"
                       value={formData.semester}
                       onChange={handleChange}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
                     >
                       <option value="">Select Semester</option>
                       {[1,2,3,4,5,6,7,8].map(sem => (
@@ -316,7 +326,7 @@ function ProfileContent() {
 
                 <button
                   onClick={() => setStep(2)}
-                  className="w-full bg-accent hover:opacity-90 text-white font-black py-5 rounded-2xl shadow-xl shadow-accent/20 mt-4 flex items-center justify-center gap-2 group transition-all"
+                  className="w-full bg-accent hover:opacity-90 text-white font-bold py-3 md:py-4 rounded-2xl shadow-xl shadow-accent/20 mt-4 flex items-center justify-center gap-2 group transition-all"
                 >
                   Continue to Vehicle Details
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
@@ -331,7 +341,7 @@ function ProfileContent() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-neutral-900/40 border border-neutral-800 p-8 rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
+              className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
             >
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-3 bg-purple-500/20 rounded-2xl border border-purple-500/30">
@@ -351,7 +361,7 @@ function ProfileContent() {
                     value={formData.vehicleNo}
                     onChange={handleChange}
                     placeholder="HR 26 AB 1234"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-6 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all uppercase font-mono font-bold"
+                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all uppercase font-mono font-bold"
                   />
                 </div>
 
@@ -378,11 +388,11 @@ function ProfileContent() {
                 </div>
 
                 <div className="flex gap-4 mt-8">
-                  <button onClick={() => setStep(1)} className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-5 rounded-2xl transition-all">Back</button>
+                  <button onClick={() => setStep(1)} className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3 md:py-4 rounded-2xl transition-all">Back</button>
                   <button
                     disabled={!rcPreview}
                     onClick={() => setStep(3)}
-                    className="flex-[2] bg-accent hover:opacity-90 text-white font-black py-5 rounded-2xl shadow-xl shadow-accent/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    className="flex-[2] bg-accent hover:opacity-90 text-white font-bold py-3 md:py-4 rounded-2xl shadow-xl shadow-accent/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                   >
                     Next: ID Cards
                     <ArrowRight className="w-5 h-5" />
@@ -398,7 +408,7 @@ function ProfileContent() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-neutral-900/40 border border-neutral-800 p-8 rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
+              className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
             >
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
@@ -458,11 +468,11 @@ function ProfileContent() {
                 </div>
 
                 <div className="flex gap-4 mt-8">
-                  <button onClick={() => setStep(2)} className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-5 rounded-2xl transition-all">Back</button>
+                  <button onClick={() => setStep(2)} className="flex-1 bg-neutral-800 hover:bg-neutral-700 text-white font-bold py-3 md:py-4 rounded-2xl transition-all">Back</button>
                   <button
                     disabled={loading || !idFrontPreview || !idBackPreview}
                     onClick={handleSave}
-                    className="flex-[2] bg-accent hover:opacity-90 text-white font-black py-5 rounded-2xl shadow-xl shadow-accent/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
+                    className="flex-[2] bg-accent hover:opacity-90 text-white font-bold py-3 md:py-4 rounded-2xl shadow-xl shadow-accent/20 flex items-center justify-center gap-2 transition-all disabled:opacity-50"
                   >
                     {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ShieldCheck className="w-5 h-5" />}
                     {loading ? 'Processing...' : 'Complete Registration'}
@@ -477,7 +487,7 @@ function ProfileContent() {
               key="step0"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-neutral-900/40 border border-neutral-800 p-10 rounded-[3rem] backdrop-blur-2xl shadow-2xl text-center"
+              className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] backdrop-blur-2xl shadow-2xl text-center"
             >
               <div className="flex flex-col items-center mb-8">
                 <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 border border-green-500/30 overflow-hidden relative">
@@ -510,7 +520,7 @@ function ProfileContent() {
               <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={downloadQR}
-                  className="w-full bg-neutral-950 border border-neutral-800 hover:border-accent/40 text-white font-bold py-4 rounded-2xl flex items-center justify-center gap-2 transition-all"
+                  className="w-full bg-neutral-950 border border-neutral-800 hover:border-accent/40 text-white font-bold py-3 md:py-4 rounded-2xl flex items-center justify-center gap-2 transition-all"
                 >
                   <Download className="w-5 h-5" />
                   Save to Device

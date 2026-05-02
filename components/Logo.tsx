@@ -10,12 +10,12 @@ export default function Logo({ className = "" }: { className?: string }) {
         <div className="absolute inset-0 bg-accent/30 rounded-xl blur-lg group-hover:bg-accent/50 transition-all" />
         
         {/* Main Icon Box */}
-        <div className="relative p-2.5 bg-gradient-to-br from-accent to-blue-700 rounded-xl border border-white/20 shadow-xl">
-          <Shield className="w-5 h-5 text-white" />
+        <div className="relative p-2.5 bg-gradient-to-br from-accent to-[#1e1b4b] rounded-xl border border-white/20 shadow-xl">
+          <Shield className="w-5 h-5 text-amber-400" />
           
           {/* Car Silhouette Detail */}
           <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-white rounded-md flex items-center justify-center shadow-lg border border-accent/20">
-             <div className="w-2.5 h-1 bg-accent rounded-full" />
+             <div className="w-2.5 h-1 bg-amber-500 rounded-full" />
           </div>
         </div>
       </div>

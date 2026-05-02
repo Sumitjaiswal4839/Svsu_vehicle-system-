@@ -41,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 flex items-center justify-center p-6 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative overflow-x-hidden overflow-y-auto">
       {/* Background Orbs */}
       <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10" />
       <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-purple-600/5 rounded-full blur-[150px] -z-10" />
@@ -49,7 +49,7 @@ export default function LoginPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-neutral-900/40 border border-neutral-800 p-10 rounded-[2.5rem] shadow-2xl backdrop-blur-2xl"
+        className="w-full max-w-md bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl my-auto"
       >
         <div className="flex flex-col items-center mb-10 text-center">
           <div className="p-4 bg-accent/20 rounded-2xl border border-accent/30 shadow-[0_0_20px_rgba(37,99,235,0.2)] mb-6">
@@ -93,7 +93,7 @@ export default function LoginPage() {
           <button
             disabled={loading}
             type="submit"
-            className="w-full bg-accent hover:opacity-90 text-white font-extrabold py-5 rounded-2xl shadow-xl shadow-accent/20 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4 flex items-center justify-center gap-2 group"
+            className="w-full bg-accent hover:opacity-90 text-white font-bold py-3 md:py-4 rounded-2xl shadow-xl shadow-accent/20 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4 flex items-center justify-center gap-2 group"
           >
             {loading ? (
               <Loader2 className="w-5 h-5 animate-spin" />

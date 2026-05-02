@@ -63,6 +63,7 @@ export default function GuardDashboard() {
   const [search, setSearch] = useState('');
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isQROpen, setIsQROpen] = useState(false);
   const [verifyingProfile, setVerifyingProfile] = useState<any>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [lastActivityCount, setLastActivityCount] = useState(0);
@@ -203,11 +204,16 @@ export default function GuardDashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 relative overflow-hidden">
+    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 pt-24 md:pt-28 relative overflow-hidden">
       <QRScanner 
         isOpen={isScannerOpen} 
         onClose={() => setIsScannerOpen(false)} 
         onScanSuccess={handleScanSuccess} 
+      />
+
+      <QRGenerator 
+        isOpen={isQROpen} 
+        onClose={() => setIsQROpen(false)} 
       />
 
       <VerificationModal 
@@ -231,20 +237,30 @@ export default function GuardDashboard() {
 
       <div className="max-w-7xl mx-auto space-y-8">
         {/* Top Header */}
-        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 pt-16 lg:pt-0">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-accent/20 rounded-2xl border border-accent/30 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-              <Shield className="w-6 h-6 md:w-8 md:h-8 text-accent" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tighter bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent leading-none">
-                Guard Console
-              </h1>
-              <div className="flex items-center gap-2 text-neutral-500 text-[10px] md:text-sm font-bold uppercase mt-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                Live Security Feed
+        <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
+          <div className="flex items-center justify-between w-full lg:w-auto">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-accent/20 rounded-2xl border border-accent/30 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
+                <Shield className="w-6 h-6 md:w-8 md:h-8 text-accent" />
+              </div>
+              <div>
+                <h1 className="text-2xl md:text-3xl font-black tracking-tighter bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent leading-none">
+                  Guard Console
+                </h1>
+                <div className="flex items-center gap-2 text-neutral-500 text-[10px] md:text-sm font-bold uppercase mt-1">
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                  Live Security Feed
+                </div>
               </div>
             </div>
+            {/* Mobile Logout Button */}
+            <button 
+              onClick={handleLogout}
+              aria-label="Logout from Guard Dashboard"
+              className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-red-500/10 hover:border-red-500/30 text-neutral-400 hover:text-red-500 lg:hidden transition-all group shrink-0"
+            >
+              <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            </button>
           </div>
 
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
@@ -255,6 +271,15 @@ export default function GuardDashboard() {
             >
               <QrCode className="w-4 h-4" />
               Scan QR
+            </button>
+
+            <button 
+              onClick={() => setIsQROpen(true)}
+              aria-label="Generate Temporary Pass"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-800 hover:text-white transition-all"
+            >
+              <Users className="w-4 h-4" />
+              Issue Pass
             </button>
 
             <Link
@@ -290,7 +315,7 @@ export default function GuardDashboard() {
             <button 
               onClick={handleLogout}
               aria-label="Logout from Guard Dashboard"
-              className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-red-500/10 hover:border-red-500/30 text-neutral-400 hover:text-red-500 transition-all group"
+              className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-red-500/10 hover:border-red-500/30 text-neutral-400 hover:text-red-500 transition-all group hidden lg:block"
             >
               <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
             </button>
@@ -331,16 +356,7 @@ export default function GuardDashboard() {
           </div>
         </div>
 
-        {/* QR Section */}
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-accent/5 border border-accent/20 rounded-[2rem] overflow-hidden"
-        >
-          <div className="p-1">
-            <QRGenerator />
-          </div>
-        </motion.div>
+
 
         {/* Tabs and Content */}
         <div className="space-y-6">

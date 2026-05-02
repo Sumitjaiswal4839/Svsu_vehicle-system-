@@ -64,13 +64,13 @@ export default function VisitorEntryPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 flex items-center justify-center">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.1),transparent_50%)]" />
+    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 flex flex-col pt-28 pb-12 relative">
+      <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.1),transparent_50%)] pointer-events-none" />
       
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="z-10 w-full max-w-2xl bg-neutral-900/40 border border-neutral-800 p-8 md:p-10 rounded-[2.5rem] shadow-2xl backdrop-blur-2xl"
+        className="z-10 w-full max-w-2xl bg-neutral-900/40 border border-neutral-800 p-6 md:p-10 rounded-[2.5rem] shadow-2xl backdrop-blur-2xl my-auto mx-auto"
       >
         <Link href="/admin" className="flex items-center gap-2 text-neutral-500 hover:text-accent mb-8 transition-colors group">
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
@@ -187,7 +187,7 @@ export default function VisitorEntryPage() {
           <button
             disabled={isSubmitting || !capturedImage}
             type="submit"
-            className="w-full bg-accent hover:opacity-90 text-white font-extrabold py-5 rounded-2xl shadow-xl shadow-accent/20 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4 flex items-center justify-center gap-3"
+            className="w-full bg-accent hover:opacity-90 text-white font-bold py-3 md:py-4 rounded-2xl shadow-xl shadow-accent/20 transition-all transform active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed mt-4 flex items-center justify-center gap-3"
           >
             {isSubmitting ? (
               <motion.div 
