@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     }
 
     // Find the latest active entry
-    const record = await prisma.entryRecord.findFirst({
+    const record: any = await prisma.entryRecord.findFirst({
       where: {
         OR: [
           { id: entryId },
@@ -36,15 +36,22 @@ export async function POST(request: Request) {
       }
     });
 
+
     if (!record) {
       return NextResponse.json({ error: 'No active entry found' }, { status: 404 });
     }
 
     if (record.isTemporary) {
       // PERMANENTLY DELETE temporary visitor data on exit
+      if (record.visitorId) {
+        await (prisma as any).visitorEntry.delete({ where: { id: record.visitorId } });
+      }
+
+      
       await prisma.entryRecord.delete({
         where: { id: record.id }
       });
+
 
       return NextResponse.json({
         message: 'Visitor exit registered and data cleared',

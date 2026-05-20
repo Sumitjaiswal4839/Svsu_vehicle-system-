@@ -17,13 +17,15 @@
   filter: grayscale(1) brightness(1.5);
 }
 
-
 :root {
-  --background: #ffffff;
-  --foreground: #111827;
-  --card: #f9fafb;
-  --border: #e5e7eb;
-  --accent: #373380; /* SVSU Indigo */
+  --font-geist-sans: "Inter", Arial, sans-serif;
+  --font-geist-mono: "Fira Code", monospace;
+  --background: #EFF0DF;
+  --foreground: #2D2D2D;
+  --card: #F1E68A;
+  --border: #BBBBBB;
+  --accent: #9489C2;
+  --accent-blue: #77B5D6;
 }
 
 .dark {
@@ -31,32 +33,28 @@
   --foreground: #fafafa;
   --card: #18181b;
   --border: #27272a;
-  --accent: #5e59b3; /* SVSU Indigo Lighter for dark mode contrast */
+  --accent: #9489C2; /* Keep purple for consistency */
+  --accent-blue: #373380;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-border: var(--border);
-  --color-accent: var(--accent);
+html, body {
+  height: 100%;
+  background-color: var(--background);
+  color: var(--foreground);
+  transition: background-color 0.5s ease, color 0.5s ease;
 }
 
 body {
-  background-color: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-geist-sans), ui-sans-serif, system-ui;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
 }
 
-/* Custom Utilities */
-.glass {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.container {
+  max-width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
 }
 
-.dark .glass {
-  background: rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}

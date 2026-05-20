@@ -22,13 +22,16 @@ export async function POST(request: Request) {
       rcPhoto,
       idCardFront,
       idCardBack,
-      profilePhoto
+      profilePhoto,
+      buildingId
     } = body;
 
+
     // Validation
-    if (!name || !rollNo || !vehicleNo || !rcPhoto || !idCardFront || !idCardBack || !password || !faculty || !profilePhoto) {
-      return NextResponse.json({ error: 'Missing mandatory fields. Ensure all photos are captured.' }, { status: 400 });
+    if (!name || !rollNo || !vehicleNo || !rcPhoto || !idCardFront || !idCardBack || !password || !faculty || !profilePhoto || !buildingId) {
+      return NextResponse.json({ error: 'Missing mandatory fields. Ensure all photos are captured and building is selected.' }, { status: 400 });
     }
+
 
     let rcPhotoUrl = rcPhoto;
     let idFrontUrl = idCardFront;

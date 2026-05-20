@@ -69,11 +69,27 @@ export default function HiddenTerminal() {
       } catch (err) {
         setHistory(prev => [...prev, `> ${cmd}`, 'Connection Error. Terminal locked.']);
       }
+    } else if (cmd === 'logout') {
+      try {
+        await fetch('/api/auth/logout', { method: 'POST' });
+        setHistory(prev => [...prev, '> logout', 'Terminating Session...', 'Clearing local cache...', 'Redirecting...']);
+        sessionStorage.removeItem('admin_unlocked');
+        window.dispatchEvent(new Event('admin-locked'));
+        
+        setTimeout(() => {
+          setIsOpen(false);
+          window.location.href = '/login';
+        }, 1500);
+      } catch (err) {
+        setHistory(prev => [...prev, '> logout', 'Logout failed. Force clearing...']);
+        window.location.href = '/login';
+      }
     } else if (cmd === 'clear') {
       setHistory([]);
     } else if (cmd === 'exit') {
       setIsOpen(false);
-    } else {
+    }
+ else {
       setHistory(prev => [...prev, `> ${cmd}`, 'Invalid command. Access Denied.']);
     }
     

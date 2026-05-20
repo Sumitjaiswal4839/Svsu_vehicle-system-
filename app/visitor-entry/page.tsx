@@ -11,11 +11,14 @@ import {
   Camera, 
   CheckCircle2, 
   ArrowLeft,
-  Car
+  Car,
+  MapPin
 } from 'lucide-react';
 import CameraCapture from '@/components/CameraCapture';
 import { toast } from 'sonner';
 import { useRouter } from 'next/navigation';
+import { BUILDING_MAP } from '@/lib/building-logic';
+
 
 export default function VisitorEntryPage() {
   const router = useRouter();
@@ -25,27 +28,43 @@ export default function VisitorEntryPage() {
     visitorContact: '',
     vehicleNo: '',
     visitorPhoto: '',
+    buildingId: '',
+    isHackathon: false,
     isTemporary: true
   });
+
 
   const [capturedImage, setCapturedImage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => ({ 
+      ...prev, 
+      [name]: value,
+      isHackathon: name === 'visitorPurpose' ? value.toLowerCase().includes('hackathon') : prev.isHackathon
+    }));
   };
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/entry', {
+      const response = await fetch('/api/visitor/entry', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          name: formData.visitorName,
+          purpose: formData.visitorPurpose,
+          contact: formData.visitorContact,
+          photo: formData.visitorPhoto,
+          buildingId: formData.buildingId,
+          isHackathon: formData.isHackathon
+        }),
       });
+
 
       const data = await response.json();
 
@@ -136,7 +155,32 @@ export default function VisitorEntryPage() {
                 className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
               />
             </div>
+            {formData.isHackathon && (
+               <div className="px-3 py-1 bg-purple-500/10 text-purple-400 text-[10px] font-black rounded-lg border border-purple-500/20 w-fit mt-2">
+                 HACKATHON PARTICIPANT TAGGED
+               </div>
+            )}
           </div>
+
+          <div className="space-y-2">
+            <label className="text-xs font-bold uppercase tracking-widest text-neutral-500 ml-1">Destination Building</label>
+            <div className="relative">
+              <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+              <select
+                required
+                name="buildingId"
+                value={formData.buildingId}
+                onChange={handleChange}
+                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none font-bold"
+              >
+                <option value="">Select Building</option>
+                {BUILDING_MAP.map(b => (
+                  <option key={b.code} value={b.code}>{b.name} ({b.code})</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
 
           <div className="space-y-2">
             <label className="text-xs font-bold uppercase tracking-widest text-neutral-500 ml-1">Vehicle No. (Optional)</label>

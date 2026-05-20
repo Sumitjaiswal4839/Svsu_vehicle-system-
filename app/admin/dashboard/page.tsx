@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
   RefreshCw, 
@@ -35,15 +35,48 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
+  const [buildings, setBuildings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+
   const [updating, setUpdating] = useState<string | null>(null);
   const [exporting, setExporting] = useState(false);
+  const [isAddGuardOpen, setIsAddGuardOpen] = useState(false);
+  const [newGuard, setNewGuard] = useState({ username: '', password: '', buildingId: '' });
+  const [creating, setCreating] = useState(false);
+
+  const handleAddGuard = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreating(true);
+    try {
+      const res = await fetch('/api/admin/guards', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newGuard)
+      });
+
+      if (res.ok) {
+        toast.success('Guard created successfully');
+        setIsAddGuardOpen(false);
+        setNewGuard({ username: '', password: '', buildingId: '' });
+        fetchGuards();
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to create guard');
+      }
+    } catch (err) {
+      toast.error('Connection error');
+    } finally {
+      setCreating(false);
+    }
+  };
+
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     const init = async () => {
-      await Promise.all([fetchGuards(), fetchStats()]);
+      await Promise.all([fetchGuards(), fetchStats(), fetchBuildings()]);
       if (activeTab === 'students') await fetchManagementData('students');
+
       if (activeTab === 'sessions') await fetchManagementData('sessions');
       setLoading(false);
     };
@@ -86,6 +119,14 @@ export default function AdminDashboard() {
     } catch (err) {}
   };
 
+  const fetchBuildings = async () => {
+    try {
+      const res = await fetch('/api/buildings');
+      if (res.ok) setBuildings(await res.json());
+    } catch (err) {}
+  };
+
+
   const fetchGuards = async () => {
     try {
       const res = await fetch('/api/admin/guards');
@@ -119,19 +160,28 @@ export default function AdminDashboard() {
     }
   };
 
-  const toggleAuthorization = async (guardId: string, currentStatus: boolean) => {
+  const toggleAuthorization = async (guardId: string, currentStatus: boolean, buildingId?: string) => {
     setUpdating(guardId);
     try {
       const res = await fetch('/api/admin/guards', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guardId, isAuthorized: !currentStatus })
+        body: JSON.stringify({ 
+          guardId, 
+          isAuthorized: buildingId ? currentStatus : !currentStatus,
+          buildingId: buildingId || undefined
+        })
       });
 
       if (res.ok) {
-        setGuards(prev => prev.map(g => g.id === guardId ? { ...g, isAuthorized: !currentStatus } : g));
-        toast.success(`Guard ${!currentStatus ? 'Authorized' : 'Deauthorized'}`);
-        fetchStats(); // Refresh stats for pending count
+        setGuards(prev => prev.map(g => g.id === guardId ? { 
+          ...g, 
+          isAuthorized: buildingId ? currentStatus : !currentStatus,
+          buildingId: buildingId || g.buildingId
+        } : g));
+        if (!buildingId) toast.success(`Guard ${!currentStatus ? 'Authorized' : 'Deauthorized'}`);
+        else toast.success('Building Assigned');
+        fetchStats(); 
       } else {
         toast.error('Failed to update status');
       }
@@ -141,6 +191,7 @@ export default function AdminDashboard() {
       setUpdating(null);
     }
   };
+
 
   const handleLogout = async () => {
     await fetch('/api/auth/logout', { method: 'POST' });
@@ -158,22 +209,20 @@ export default function AdminDashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 relative overflow-hidden">
+    <main className="min-h-screen bg-background text-foreground p-4 md:p-8 pt-32 md:pt-40 relative overflow-hidden transition-colors duration-500">
       {/* Background Glow */}
-      <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10" />
+      <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[150px] -z-10" />
       <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-600/5 rounded-full blur-[150px] -z-10" />
 
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 mb-12">
           <div className="flex items-center gap-6">
-            <Logo className="scale-125 origin-left" />
-            <div className="w-[1px] h-12 bg-white/10 hidden lg:block" />
             <div>
-              <h1 className="text-3xl font-black tracking-tighter bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent">
+              <h1 className="text-4xl font-black tracking-tighter bg-gradient-to-r from-foreground to-foreground/40 bg-clip-text text-transparent">
                 Command Center
               </h1>
-              <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-[0.2em] mt-1">Enterprise Security Management</p>
+              <p className="text-[10px] text-foreground/50 font-bold uppercase tracking-[0.2em] mt-1">Enterprise Security Management</p>
             </div>
           </div>
 
@@ -257,7 +306,97 @@ export default function AdminDashboard() {
                     <h2 className="text-xl font-bold">Security Personnel</h2>
                     <p className="text-xs text-neutral-500">Authorize or manage guard access levels</p>
                   </div>
+                  <button 
+                    onClick={() => setIsAddGuardOpen(true)}
+                    className="flex items-center gap-2 px-4 py-2 bg-accent text-white rounded-xl hover:bg-accent/80 transition-all text-[10px] font-black uppercase tracking-widest shadow-lg shadow-accent/20"
+                  >
+                    <UserPlus className="w-4 h-4" />
+                    Register Guard
+                  </button>
                 </div>
+
+                {/* Add Guard Modal */}
+                <AnimatePresence>
+                  {isAddGuardOpen && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+                      <motion.div 
+                        initial={{ opacity: 0 }} 
+                        animate={{ opacity: 1 }} 
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsAddGuardOpen(false)}
+                        className="absolute inset-0 bg-black/60 backdrop-blur-sm" 
+                      />
+                      <motion.div 
+                        initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                        animate={{ opacity: 1, scale: 1, y: 0 }}
+                        exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                        className="relative w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden"
+                      >
+                         <div className="absolute top-0 right-0 p-8 opacity-5">
+                            <UserPlus className="w-24 h-24" />
+                         </div>
+                         <h2 className="text-2xl font-black mb-2">Register Guard</h2>
+                         <p className="text-xs text-neutral-500 mb-8 uppercase tracking-widest font-bold">New Security Personnel Credentials</p>
+
+                         <form onSubmit={handleAddGuard} className="space-y-4">
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-4">Username</label>
+                               <input 
+                                 required
+                                 type="text" 
+                                 value={newGuard.username}
+                                 onChange={(e) => setNewGuard({...newGuard, username: e.target.value})}
+                                 placeholder="e.g. guard_officer_01"
+                                 className="w-full bg-black border border-neutral-800 rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all"
+                               />
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-4">Password</label>
+                               <input 
+                                 required
+                                 type="password" 
+                                 value={newGuard.password}
+                                 onChange={(e) => setNewGuard({...newGuard, password: e.target.value})}
+                                 placeholder="••••••••"
+                                 className="w-full bg-black border border-neutral-800 rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all"
+                               />
+                            </div>
+                            <div className="space-y-2">
+                               <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-4">Assign Building</label>
+                               <select 
+                                 value={newGuard.buildingId}
+                                 onChange={(e) => setNewGuard({...newGuard, buildingId: e.target.value})}
+                                 className="w-full bg-black border border-neutral-800 rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all appearance-none"
+                               >
+                                  <option value="">No Initial Assignment</option>
+                                  {buildings.map(b => (
+                                    <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
+                                  ))}
+                               </select>
+                            </div>
+
+                            <div className="pt-4 flex gap-3">
+                               <button 
+                                 type="button"
+                                 onClick={() => setIsAddGuardOpen(false)}
+                                 className="flex-1 py-4 bg-neutral-800 text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-700 transition-all"
+                               >
+                                  Cancel
+                               </button>
+                               <button 
+                                 type="submit"
+                                 disabled={creating}
+                                 className="flex-[2] py-4 bg-accent text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-accent/80 transition-all shadow-lg shadow-accent/20 flex items-center justify-center gap-2"
+                               >
+                                  {creating ? <Loader2 className="w-4 h-4 animate-spin" /> : <UserPlus className="w-4 h-4" />}
+                                  Register Personnel
+                               </button>
+                            </div>
+                         </form>
+                      </motion.div>
+                    </div>
+                  )}
+                </AnimatePresence>
 
                 <div className="space-y-4">
                   {guards.map((guard) => (
@@ -268,11 +407,25 @@ export default function AdminDashboard() {
                         </div>
                         <div>
                           <h3 className="font-bold">{guard.username}</h3>
-                          <p className={`text-[10px] font-black uppercase tracking-widest ${guard.isAuthorized ? 'text-green-500' : 'text-orange-500'}`}>
-                            {guard.isAuthorized ? 'Active Guard' : 'Approval Pending'}
-                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <p className={`text-[10px] font-black uppercase tracking-widest ${guard.isAuthorized ? 'text-green-500' : 'text-orange-500'}`}>
+                              {guard.isAuthorized ? 'Active Guard' : 'Approval Pending'}
+                            </p>
+                            <span className="text-[10px] text-neutral-600">•</span>
+                            <select 
+                              value={guard.buildingId || ''}
+                              onChange={(e) => toggleAuthorization(guard.id, guard.isAuthorized, e.target.value)}
+                              className="bg-transparent text-[10px] font-bold text-accent outline-none border-b border-accent/20 hover:border-accent transition-colors"
+                            >
+                              <option value="">No Building Assigned</option>
+                              {buildings.map(b => (
+                                <option key={b.id} value={b.id} className="bg-neutral-900">{b.name} ({b.code})</option>
+                              ))}
+                            </select>
+                          </div>
                         </div>
                       </div>
+
 
                       <button
                         disabled={updating === guard.id}
@@ -303,6 +456,28 @@ export default function AdminDashboard() {
                       ))}
                    </div>
                 </div>
+
+                <div className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl">
+                   <h2 className="text-xl font-bold mb-6">Building Occupancy</h2>
+                   <div className="space-y-4">
+                      {stats?.buildingStats?.map((bs: any) => (
+                        <div key={bs.buildingId} className="space-y-2">
+                           <div className="flex items-center justify-between">
+                              <span className="text-xs font-bold text-neutral-300">{bs.buildingId || 'Unassigned'}</span>
+                              <span className="text-xs font-black text-accent">{bs._count._all}</span>
+                           </div>
+                           <div className="h-1.5 bg-neutral-950 rounded-full overflow-hidden border border-white/5">
+                              <motion.div 
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.min(100, (bs._count._all / (stats.totalEntries || 1)) * 100)}%` }}
+                                className="h-full bg-accent"
+                              />
+                           </div>
+                        </div>
+                      ))}
+                   </div>
+                </div>
+
               </div>
             </div>
           </motion.div>

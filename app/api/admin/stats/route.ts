@@ -15,7 +15,8 @@ export async function GET() {
     const { payload } = await jwtVerify(token, JWT_SECRET);
     if (payload.role !== 'ADMIN') return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
 
-    const [totalEntries, activeVehicles, totalStudents, pendingGuards, auditStats] = await Promise.all([
+    const [totalEntries, activeVehicles, totalStudents, pendingGuards, auditStats, buildingStats] = await Promise.all([
+
       prisma.entryRecord.count({
         where: { entryTime: { gte: new Date(new Date().setHours(0,0,0,0)) } }
       }),
@@ -25,8 +26,13 @@ export async function GET() {
       prisma.auditLog.groupBy({
         by: ['action'],
         _count: { _all: true }
+      }),
+      prisma.entryRecord.groupBy({
+        by: ['buildingId'],
+        _count: { _all: true }
       })
     ]);
+
 
     // Fetch Top Active Guards
     const guardActivity = await prisma.auditLog.findMany({
@@ -55,7 +61,9 @@ export async function GET() {
       pendingGuards,
       hourlyStats,
       auditStats,
+      buildingStats,
       topGuards: guardActivity
+
     });
   } catch (error) {
     console.error('Stats Error:', error);

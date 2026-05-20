@@ -10,23 +10,26 @@ datasource db {
 }
 
 model UserVehicleProfile {
-  id        String   @id @default(uuid())
-  name      String
-  course    String
-  semester  String
-  faculty   String?  // Faculty name
-  rollNo    String   @unique
-  password  String   // Hashed password for security
-  vehicleNo String
-  license   String?
-  rcPhoto   String   // Mandatory RC photo URL
-  idCardFront String // Mandatory ID Card Front
-  idCardBack  String // Mandatory ID Card Back
+  id           String   @id @default(uuid())
+  name         String
+  course       String
+  semester     String
+  faculty      String?  // Faculty name
+  rollNo       String   @unique
+  password     String   // Hashed password for security
+  vehicleNo    String
+  license      String?
+  rcPhoto      String   // Mandatory RC photo URL
+  idCardFront  String // Mandatory ID Card Front
+  idCardBack   String // Mandatory ID Card Back
   profilePhoto String? // Optional profile photo
-  lastLogin DateTime @default(now())
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  entries   EntryRecord[]
+  lastLogin    DateTime @default(now())
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  entries      EntryRecord[]
+  
+  buildingId   String?
+  building     Building? @relation(fields: [buildingId], references: [id])
 
   @@index([rollNo])
   @@index([vehicleNo])
@@ -55,9 +58,18 @@ model EntryRecord {
   visitorContact  String?
   visitorPhoto    String?
   
+  // Visitor Linkage
+  visitorId       String?
+  visitor         VisitorEntry? @relation("VisitorToEntry", fields: [visitorId], references: [id])
+
   entryTime       DateTime @default(now())
+
   exitTime        DateTime?
   isTemporary     Boolean  @default(false)
+
+  // Building Context
+  buildingId      String?
+  building        Building? @relation(fields: [buildingId], references: [id])
 
   @@index([profileId])
   @@index([isTemporary])
@@ -75,6 +87,39 @@ model User {
   isAuthorized Boolean @default(false)
   sessions     Session[]
   auditLogs    AuditLog[]
+
+  buildingId   String?
+  building     Building? @relation(fields: [buildingId], references: [id])
+}
+
+model Building {
+  id        String   @id @default(uuid())
+  name      String
+  code      String   @unique // e.g., 1E, 2E, 3E, 2W, 3W, Workshop, Gymnasium
+  guards    User[]
+  students  UserVehicleProfile[]
+  entries   EntryRecord[]
+  visitors  VisitorEntry[]
+  createdAt DateTime @default(now())
+}
+
+model VisitorEntry {
+  id            String    @id @default(uuid())
+  name          String
+  purpose       String
+  contact       String?
+  photo         String?
+  buildingId    String?
+  building      Building? @relation(fields: [buildingId], references: [id])
+  entryTime     DateTime  @default(now())
+  exitTime      DateTime?
+  isHackathon   Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+
+  entries       EntryRecord[] @relation("VisitorToEntry")
+
+  @@index([buildingId])
+
 }
 
 model Session {
@@ -104,4 +149,5 @@ model AuditLog {
   @@index([userId])
   @@index([action])
 }
+
 

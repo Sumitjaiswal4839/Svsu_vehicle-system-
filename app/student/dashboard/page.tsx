@@ -30,6 +30,8 @@ export default function StudentDashboard() {
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const [processing, setProcessing] = useState(false);
 
+  const [activeTab, setActiveTab] = useState<'qr' | 'profile' | 'activity'>('qr');
+
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -50,10 +52,19 @@ export default function StudentDashboard() {
     fetchProfile();
   }, [router]);
 
-  const handleLogout = () => {
-    document.cookie = "student_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT";
-    toast.success('Logged out safely');
-    router.push('/student-login');
+  const handleLogout = async () => {
+    try {
+      const res = await fetch('/api/auth/logout', { method: 'POST' });
+      if (res.ok) {
+        toast.success('Logged out successfully');
+        router.push('/');
+        router.refresh();
+      } else {
+        toast.error('Logout failed');
+      }
+    } catch (err) {
+      toast.error('Connection error');
+    }
   };
 
   const downloadQR = () => {
@@ -115,7 +126,6 @@ export default function StudentDashboard() {
 
       if (res.ok) {
         toast.success(isEntry ? "Entry Registered Successfully!" : "Exit Registered Successfully!");
-        // Refresh profile to show new entry in history
         const updated = await fetch('/api/profile').then(r => r.json());
         setProfile(updated);
       } else {
@@ -129,13 +139,10 @@ export default function StudentDashboard() {
     }
   };
 
-  if (loading) {
+  if (loading || !profile) {
     return (
       <div className="min-h-screen bg-[#0a0a0c] flex flex-col items-center justify-center space-y-4">
-        <motion.div 
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        >
+        <motion.div animate={{ rotate: 360 }} transition={{ duration: 2, repeat: Infinity, ease: "linear" }}>
           <ShieldCheck className="w-12 h-12 text-accent" />
         </motion.div>
         <p className="text-neutral-500 font-bold uppercase tracking-widest text-[10px]">Verifying Security Access...</p>
@@ -143,13 +150,11 @@ export default function StudentDashboard() {
     );
   }
 
+
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 relative overflow-hidden">
-      <QRScanner 
-        isOpen={isScannerOpen}
-        onClose={() => setIsScannerOpen(false)}
-        onScanSuccess={handleScanSuccess}
-      />
+    <main className="min-h-screen bg-background text-foreground pb-28 pt-8 relative overflow-hidden flex flex-col transition-colors duration-500">
+      <div className="watermark opacity-[0.03] grayscale" />
+      <QRScanner isOpen={isScannerOpen} onClose={() => setIsScannerOpen(false)} onScanSuccess={handleScanSuccess} />
 
       {processing && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm">
@@ -159,214 +164,230 @@ export default function StudentDashboard() {
            </div>
         </div>
       )}
-      {/* Background Glow */}
-      <div className="absolute top-[-20%] right-[-10%] w-[60%] h-[60%] bg-blue-600/10 rounded-full blur-[150px] -z-10" />
-      <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-600/5 rounded-full blur-[150px] -z-10" />
 
-      <div className="max-w-6xl mx-auto">
-        {/* Header */}
-        <header className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-          <div className="flex items-center gap-6">
-            <Logo className="scale-110 origin-left" />
-            <div className="w-[1px] h-10 bg-white/10 hidden md:block" />
-            <div>
-              <h1 className="text-3xl font-black tracking-tight">Student Portal</h1>
-              <div className="flex items-center gap-2 text-neutral-500 text-sm font-medium mt-1">
-                <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                System Active • Secure Access
-              </div>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-3">
-            <button 
-              onClick={() => setIsScannerOpen(true)}
-              className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 shadow-xl shadow-accent/20 transition-all"
+
+
+      {/* Main Content Area */}
+      <div className="flex-1 max-w-lg mx-auto w-full px-6 overflow-y-auto custom-scrollbar">
+        <AnimatePresence mode="wait">
+          {activeTab === 'qr' && (
+            <motion.div 
+              key="qr"
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="py-4"
             >
-              <QrCode className="w-4 h-4" />
-              Scan Gate QR
-            </button>
-            <button 
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-6 py-3 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-bold hover:bg-red-500/10 hover:text-red-500 transition-all group"
-            >
-              <LogOut className="w-4 h-4" />
-              Logout
-            </button>
-          </div>
-        </header>
-
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-          {/* Left Column: Personal Info */}
-          <div className="lg:col-span-7 space-y-8">
-            <motion.section 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl"
-            >
-              <h2 className="text-xl font-bold mb-8 flex items-center gap-3">
-                <CreditCard className="w-5 h-5 text-accent" />
-                Profile Information
-              </h2>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InfoItem label="Full Name" value={profile.name} icon={<User className="w-4 h-4" />} />
-                <InfoItem label="Roll Number" value={profile.rollNo} icon={<ShieldCheck className="w-4 h-4" />} />
-                <InfoItem label="Course" value={profile.course} icon={<CreditCard className="w-4 h-4" />} />
-                <InfoItem label="Current Semester" value={profile.semester || 'N/A'} icon={<Calendar className="w-4 h-4" />} />
-                <InfoItem label="Vehicle No" value={profile.vehicleNo} icon={<Car className="w-4 h-4" />} />
-                <InfoItem label="Last Login" value={new Date(profile.lastLogin).toLocaleDateString()} icon={<Clock className="w-4 h-4" />} />
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-10 pt-8 border-t border-neutral-800">
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1">College ID Card (Front)</p>
-                  <div className="relative overflow-hidden rounded-3xl border border-neutral-800 aspect-[1.6/1]">
-                    <img src={profile.idCardFront} alt="ID Front" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-                <div className="space-y-4">
-                  <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest ml-1">College ID Card (Back)</p>
-                  <div className="relative overflow-hidden rounded-3xl border border-neutral-800 aspect-[1.6/1]">
-                    <img src={profile.idCardBack} alt="ID Back" className="w-full h-full object-cover" />
-                  </div>
-                </div>
-              </div>
-
-              <div className="mt-10 pt-8 border-t border-neutral-800 flex justify-between items-center">
-                <div className="space-y-1">
-                   <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Profile Status</p>
-                   <p className="text-sm font-bold text-green-500">Fully Verified</p>
-                </div>
-                <Link 
-                  href="/profile?edit=true"
-                  className="px-6 py-3 bg-accent/10 border border-accent/30 text-accent rounded-2xl font-bold hover:bg-accent hover:text-white transition-all text-sm"
-                >
-                  Edit Profile Details
-                </Link>
-              </div>
-
-            </motion.section>
-
-            {/* Entry History */}
-            <motion.section 
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
-              className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl"
-            >
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="text-xl font-bold flex items-center gap-3">
-                  <Clock className="w-5 h-5 text-accent" />
-                  Recent Activity
-                </h2>
-                <span className="text-[10px] font-black text-neutral-500 uppercase tracking-widest">Last 5 Entries</span>
-              </div>
-
-              <div className="space-y-4">
-                {profile.entries?.length > 0 ? (
-                  profile.entries.map((entry: any) => (
-                    <div key={entry.id} className="bg-neutral-950/50 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between hover:border-accent/40 transition-colors">
-                      <div className="flex items-center gap-4">
-                        <div className={`p-2 rounded-xl ${entry.exitTime ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
-                          <MapPin className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold">Campus Gate Access</p>
-                          <p className="text-xs text-neutral-500">{new Date(entry.entryTime).toLocaleString()}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <p className={`text-xs font-black uppercase tracking-widest ${entry.exitTime ? 'text-green-500' : 'text-blue-500'}`}>
-                          {entry.exitTime ? 'Completed' : 'Inside'}
-                        </p>
-                        {entry.exitTime && (
-                          <p className="text-[10px] text-neutral-600">Exit: {new Date(entry.exitTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                ) : (
-                  <div className="text-center py-10 text-neutral-600 italic text-sm">
-                    No recent entry records found.
-                  </div>
-                )}
-              </div>
-            </motion.section>
-          </div>
-
-          {/* Right Column: Gate Pass QR */}
-          <div className="lg:col-span-5">
-            <motion.section 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="sticky top-8 bg-accent rounded-[3rem] p-10 text-white shadow-[0_30px_60px_-15px_rgba(37,99,235,0.4)] overflow-hidden"
-            >
-              {/* Card Decoration */}
-              <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-white/10 rounded-full blur-[80px]" />
-              <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-black/10 rounded-full blur-[80px]" />
-
-              <div className="relative z-10 flex flex-col items-center">
-                <div className="flex items-center gap-3 mb-10">
-                  <div className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-md border border-white/30">
+              <div className="w-full bg-accent rounded-[3rem] p-10 text-white shadow-[0_30px_60px_-15px_rgba(37,99,235,0.4)] overflow-hidden relative">
+                <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] bg-white/10 rounded-full blur-[80px]" />
+                
+                <div className="relative z-10 flex flex-col items-center">
+                  <div className="flex items-center gap-3 mb-8">
                     <QrCode className="w-6 h-6 text-white" />
+                    <p className="text-sm font-black tracking-widest uppercase">Digital Gate Pass</p>
                   </div>
-                  <p className="text-lg font-black tracking-widest uppercase">Digital Gate Pass</p>
+
+                  <div className="p-6 bg-white rounded-[2.5rem] shadow-2xl mb-8 group relative cursor-pointer" onClick={downloadQR}>
+                    <QRCodeSVG id="student-qr" value={`${window.location.origin}/entry?p=${profile.id}`} size={180} level="H" />
+                    <div className="absolute inset-0 bg-accent/90 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center p-4 text-center rounded-[2.5rem]">
+                      <Download className="w-8 h-8 text-white mb-2" />
+                      <p className="font-bold text-sm">Download PNG</p>
+                    </div>
+                  </div>
+
+                  <div className="text-center space-y-1 mb-8">
+                    <p className="text-xl font-black uppercase tracking-tight">{profile.name}</p>
+                    <p className="text-[10px] font-bold opacity-80 font-mono tracking-widest">{profile.rollNo}</p>
+                  </div>
+
+                  <div className="w-full bg-black/20 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between border border-white/10">
+                    <div className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                      <span className="text-[8px] font-black uppercase tracking-[0.2em] opacity-70">Security Validated</span>
+                    </div>
+                    <span className="text-[8px] font-black uppercase bg-white text-accent px-3 py-1 rounded-full">{profile.vehicleNo}</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="mt-8 grid grid-cols-2 gap-4">
+                 <QuickStat icon={<MapPin className="w-4 h-4" />} label="Last Entry" value="Today" />
+                 <QuickStat icon={<Clock className="w-4 h-4" />} label="Avg Stay" value="6.5 Hours" />
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'profile' && (
+            <motion.div 
+              key="profile"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              className="space-y-6 py-4"
+            >
+              <div className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl">
+                <div className="flex flex-col items-center mb-8">
+                  <div className="w-24 h-24 rounded-full border-4 border-accent/20 p-1 mb-4 shadow-xl">
+                    <img 
+                      src={profile.profilePhoto || '/placeholder-user.png'} 
+                      alt="Profile" 
+                      className="w-full h-full object-cover rounded-full"
+                    />
+                  </div>
+                  <h2 className="text-xl font-black">{profile.name}</h2>
+                  <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest mt-1">{profile.rollNo}</p>
                 </div>
 
-                <div className="p-6 bg-white rounded-[2.5rem] shadow-2xl mb-8 group relative overflow-hidden">
-                  <QRCodeSVG 
-                    id="student-qr" 
-                    value={`${window.location.origin}/entry?p=${profile.id}`} 
-                    size={240} 
-                    level="H"
-                  />
-                  <div className="absolute inset-0 bg-accent/90 opacity-0 group-hover:opacity-100 transition-all flex flex-col items-center justify-center p-8 text-center gap-3 cursor-pointer" onClick={downloadQR}>
-                    <Download className="w-12 h-12 mb-2" />
-                    <p className="font-black text-lg">Download Pass</p>
-                    <p className="text-xs opacity-70">Save this QR to show at the gate for instant entry</p>
-                  </div>
+                <div className="space-y-3">
+                  <InfoItem label="Registration" value={profile.rollNo} icon={<ShieldCheck className="w-3 h-3" />} />
+                  <InfoItem label="Course" value={profile.course} icon={<CreditCard className="w-3 h-3" />} />
+                  <InfoItem label="Building" value={profile.buildingId || 'Unassigned'} icon={<MapPin className="w-3 h-3" />} />
+                  <InfoItem label="Vehicle No" value={profile.vehicleNo} icon={<Car className="w-3 h-3" />} />
                 </div>
 
-                <div className="text-center space-y-1 mb-8">
-                  <p className="text-2xl font-black uppercase tracking-tight">{profile.name}</p>
-                  <p className="text-sm font-bold opacity-80 font-mono">{profile.rollNo} • {profile.vehicleNo}</p>
-                </div>
-
-                <div className="w-full bg-black/20 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between border border-white/10">
-                  <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 opacity-70" />
-                    <span className="text-[10px] font-bold uppercase tracking-widest opacity-70">Pass Status</span>
-                  </div>
-                  <span className="text-xs font-black uppercase bg-white text-accent px-3 py-1 rounded-full">Validated</span>
+                <div className="mt-6 flex justify-center">
+                   <Link href="/profile?edit=true" className="text-accent text-[10px] font-black uppercase tracking-widest border-b border-accent/20 pb-1 hover:border-accent transition-all">Edit Profile Details</Link>
                 </div>
 
                 <button 
-                  onClick={downloadQR}
-                  className="mt-8 flex items-center gap-2 text-sm font-black uppercase tracking-widest hover:translate-y-[-2px] transition-transform"
+                  onClick={handleLogout}
+
+                  className="w-full mt-8 py-4 bg-red-600/10 border border-red-600/20 text-red-500 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-red-600/20 transition-all flex items-center justify-center gap-3"
                 >
-                  <Download className="w-4 h-4" />
-                  Save Image
+                  <LogOut className="w-4 h-4" />
+                  Sign Out Account
                 </button>
               </div>
-            </motion.section>
-          </div>
-        </div>
+
+              <div className="bg-neutral-900/20 p-6 rounded-[2rem] border border-dashed border-neutral-800">
+                 <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest text-center mb-4">Verification Documents</p>
+                 <div className="flex gap-3">
+                    <div className="flex-1 aspect-video rounded-2xl bg-black border border-neutral-800 overflow-hidden shadow-xl">
+                       <img src={profile.idCardFront} className="w-full h-full object-cover opacity-50 hover:opacity-100 transition-opacity" />
+                    </div>
+                    <div className="flex-1 aspect-video rounded-2xl bg-black border border-neutral-800 overflow-hidden shadow-xl">
+                       <img src={profile.idCardBack} className="w-full h-full object-cover opacity-50 hover:opacity-100 transition-opacity" />
+                    </div>
+                 </div>
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'activity' && (
+            <motion.div 
+              key="activity"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: 20 }}
+              className="py-4"
+            >
+              <div className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl">
+                <h2 className="text-xl font-black mb-8 flex items-center gap-3 uppercase tracking-tighter">
+                  <Clock className="w-6 h-6 text-accent" />
+                  Entry Records
+                </h2>
+                <div className="space-y-4">
+                  {profile.entries?.length > 0 ? (
+                    profile.entries.map((entry: any) => (
+                      <div key={entry.id} className="bg-neutral-950/50 border border-neutral-800 p-4 rounded-2xl flex items-center justify-between group hover:border-accent/30 transition-all">
+                        <div className="flex items-center gap-4">
+                          <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${entry.exitTime ? 'bg-green-500/10 text-green-500' : 'bg-blue-500/10 text-blue-500'}`}>
+                            <Car className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-black text-white uppercase tracking-widest">Entry Registered</p>
+                            <p className="text-[10px] text-neutral-500 uppercase font-bold">{new Date(entry.entryTime).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`text-[10px] font-black uppercase tracking-tight ${entry.exitTime ? 'text-green-500' : 'text-blue-500'}`}>
+                            {entry.exitTime ? 'Completed' : 'Active'}
+                          </p>
+                          <p className="text-[10px] text-neutral-600 font-mono">{new Date(entry.entryTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-20 text-neutral-700 text-[10px] font-black uppercase tracking-widest">No Activity Found</div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
+      {/* Premium Multi-Dock */}
+      <div className="fixed bottom-6 left-0 right-0 z-50 flex justify-center px-6">
+         <div className="bg-neutral-900/80 backdrop-blur-3xl border border-white/5 rounded-[3rem] px-4 py-2 flex items-center gap-4 shadow-[0_30px_100px_-15px_rgba(0,0,0,1)]">
+            <DockItem active={activeTab === 'activity'} onClick={() => setActiveTab('activity')} icon={<Clock className="w-5 h-5" />} label="History" />
+            
+            {/* Center Primary Action: Scan QR */}
+            <div className="relative -mt-10 px-2">
+               <button 
+                onClick={() => setIsScannerOpen(true)}
+                className="w-16 h-16 bg-accent rounded-[2rem] flex items-center justify-center text-white shadow-[0_20px_40px_-10px_rgba(37,99,235,0.6)] hover:scale-105 active:scale-95 transition-all group"
+               >
+                  <div className="absolute inset-0 bg-accent rounded-[2rem] animate-ping opacity-20 group-hover:hidden" />
+                  <QrCode className="w-7 h-7 relative z-10" />
+               </button>
+            </div>
+
+            <DockItem active={activeTab === 'qr'} onClick={() => setActiveTab('qr')} icon={<CreditCard className="w-5 h-5" />} label="Pass" />
+            <DockItem active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} 
+              icon={
+                <div className={`w-6 h-6 rounded-full border ${activeTab === 'profile' ? 'border-white' : 'border-neutral-500'} overflow-hidden transition-all`}>
+                  <img src={profile.profilePhoto || '/placeholder-user.png'} className="w-full h-full object-cover" />
+                </div>
+              } 
+              label="Profile" 
+            />
+
+         </div>
       </div>
     </main>
   );
 }
 
+function DockItem({ active, onClick, icon, label }: any) {
+  return (
+    <button 
+      onClick={onClick}
+      className={`flex flex-col items-center gap-1 py-3 px-4 rounded-[2rem] transition-all relative ${active ? 'text-white' : 'text-neutral-500 hover:text-neutral-300'}`}
+    >
+      {active && (
+        <motion.div 
+          layoutId="dock-indicator"
+          className="absolute inset-0 bg-white/5 rounded-[2rem] -z-10"
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+      {icon}
+      <span className="text-[8px] font-black uppercase tracking-widest">{label}</span>
+    </button>
+  );
+}
+
 function InfoItem({ label, value, icon }: any) {
   return (
-    <div className="space-y-2">
-      <p className="text-[10px] font-black text-neutral-500 uppercase tracking-widest flex items-center gap-2 ml-1">
-        {icon}
-        {label}
-      </p>
-      <div className="bg-neutral-950/50 border border-neutral-800 rounded-2xl px-5 py-4 font-bold text-neutral-100">
-        {value}
+    <div className="flex items-center justify-between p-4 bg-neutral-950/50 border border-neutral-800 rounded-2xl group hover:border-accent/20 transition-all">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-neutral-900 rounded-lg text-neutral-500 group-hover:text-accent transition-colors">{icon}</div>
+        <span className="text-[10px] font-black uppercase tracking-widest text-neutral-500">{label}</span>
       </div>
+      <span className="text-xs font-black text-white">{value}</span>
     </div>
   );
 }
+
+function QuickStat({ icon, label, value }: any) {
+  return (
+    <div className="bg-neutral-900/40 border border-neutral-800 rounded-3xl p-5 flex flex-col items-center gap-2">
+       <div className="w-8 h-8 rounded-xl bg-accent/10 text-accent flex items-center justify-center">{icon}</div>
+       <p className="text-[8px] font-black text-neutral-500 uppercase tracking-widest">{label}</p>
+       <p className="text-sm font-black text-white">{value}</p>
+    </div>
+  );
+}
+

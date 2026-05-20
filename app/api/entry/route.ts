@@ -4,6 +4,11 @@ import { logToCSV } from '@/lib/csv';
 import { uploadPhoto } from '@/lib/supabase';
 import { logAudit } from '@/lib/audit';
 import { verifyActiveSession } from '@/lib/auth';
+import { jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
+
+const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+
 
 export async function POST(request: Request) {
   try {
@@ -12,6 +17,20 @@ export async function POST(request: Request) {
     if (!isValid) {
       return NextResponse.json({ error: 'Session expired or terminated. Please login again.' }, { status: 401 });
     }
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get('auth_token')?.value;
+    let guardBuildingId = null;
+
+    if (token) {
+      try {
+        const { payload } = await jwtVerify(token, JWT_SECRET);
+        const user = await (prisma as any).user.findUnique({ where: { id: payload.id as string } });
+        guardBuildingId = user?.buildingId;
+      } catch (e) {}
+    }
+
+
 
     const body = await request.json();
     const { 
@@ -45,7 +64,8 @@ export async function POST(request: Request) {
       }
     }
 
-    const entry = await prisma.entryRecord.create({
+    const entry: any = await (prisma.entryRecord as any).create({
+
       data: {
         profileId: profileId || null,
         isTemporary: !!isTemporary,
@@ -61,7 +81,9 @@ export async function POST(request: Request) {
         course: course || null,
         semester: semester || null,
         photoUrl: !isTemporary ? finalPhotoUrl : null,
+        buildingId: guardBuildingId || null,
       },
+
       include: {
         profile: true
       }

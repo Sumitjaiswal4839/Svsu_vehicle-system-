@@ -18,12 +18,16 @@ import {
   Lock,
   ArrowLeft,
   Eye,
-  EyeOff
+  EyeOff,
+  MapPin
 } from 'lucide-react';
+
 import CameraCapture from '@/components/CameraCapture';
 import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { getAutoBuilding, BUILDING_MAP } from '@/lib/building-logic';
+
 
 function ProfileContent() {
   const router = useRouter();
@@ -48,8 +52,10 @@ function ProfileContent() {
     rcPhoto: '',
     idCardFront: '',
     idCardBack: '',
-    profilePhoto: ''
+    profilePhoto: '',
+    buildingId: ''
   });
+
 
   const [profilePreview, setProfilePreview] = useState<string | null>(null);
   const [rcPreview, setRcPreview] = useState<string | null>(null);
@@ -80,8 +86,10 @@ function ProfileContent() {
                 rcPhoto: data.rcPhoto,
                 idCardFront: data.idCardFront,
                 idCardBack: data.idCardBack,
-                profilePhoto: data.profilePhoto || ''
+                profilePhoto: data.profilePhoto || '',
+                buildingId: data.buildingId || ''
               });
+
               setRcPreview(data.rcPhoto);
               setIdFrontPreview(data.idCardFront);
               setIdBackPreview(data.idCardBack);
@@ -102,6 +110,15 @@ function ProfileContent() {
       checkAuth();
     }
   }, [isNew, isEdit, router]);
+  
+  // Auto-assign building
+  useEffect(() => {
+    if (formData.faculty || formData.course) {
+      const bCode = getAutoBuilding(formData.faculty, formData.course);
+      setFormData(prev => ({ ...prev, buildingId: bCode }));
+    }
+  }, [formData.faculty, formData.course]);
+
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -109,10 +126,11 @@ function ProfileContent() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.rollNo || !formData.vehicleNo || !formData.rcPhoto || !formData.idCardFront || !formData.idCardBack || !formData.password || !formData.faculty || !formData.semester || !formData.course || !formData.profilePhoto) {
-      toast.error('Please fill all mandatory fields including Profile Photo');
+    if (!formData.name || !formData.rollNo || !formData.vehicleNo || !formData.rcPhoto || !formData.idCardFront || !formData.idCardBack || !formData.password || !formData.faculty || !formData.semester || !formData.course || !formData.profilePhoto || !formData.buildingId) {
+      toast.error('Please fill all mandatory fields including Profile Photo and Building');
       return;
     }
+
 
     setLoading(true);
     try {
@@ -323,6 +341,29 @@ function ProfileContent() {
                     </select>
                   </div>
                 </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Assigned Security Zone (Building)</label>
+                  <div className="relative">
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-accent" />
+                    <select
+                      name="buildingId"
+                      value={formData.buildingId}
+                      onChange={handleChange}
+                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none font-bold text-accent"
+                    >
+                      <option value="">Select Building</option>
+                      {BUILDING_MAP.map(b => (
+                        <option key={b.code} value={b.code}>{b.name} ({b.code})</option>
+                      ))}
+                    </select>
+                    <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
+                       <div className="px-2 py-0.5 bg-accent/10 rounded text-[8px] font-black uppercase text-accent border border-accent/20">Auto-Assigned</div>
+                    </div>
+                  </div>
+                  <p className="text-[9px] text-neutral-600 italic ml-1">* Based on your Faculty/Course. You can override if incorrect.</p>
+                </div>
+
 
                 <button
                   onClick={() => setStep(2)}

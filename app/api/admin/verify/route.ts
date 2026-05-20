@@ -1,14 +1,17 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
+import { cookies } from 'next/headers';
+
 
 const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
 
 export async function GET(request: Request) {
   try {
-    // Basic admin auth check
-    const token = (request as any).cookies?.get('admin_token')?.value;
+    const cookieStore = await cookies();
+    const token = cookieStore.get('admin_token')?.value;
     if (!token) {
+
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

@@ -29,13 +29,24 @@ import {
 
 import QRGenerator from '@/components/QRGenerator';
 import QRScanner from '@/components/QRScanner';
+import VisitorForm from '@/components/VisitorForm';
+import Logo from '@/components/Logo';
 import { toast } from 'sonner';
+
+
 
 interface DashboardData {
   activeVehicles: any[];
   exitedVehicles: any[];
   temporaryVisitors: any[];
+  guardBuildingId: string | null;
+  guardBuildingName: string | null;
+  guardName: string | null;
+  is_admin: boolean;
+
+
   stats: {
+
     totalToday: number;
     insideCount: number;
     overstayedCount: number;
@@ -46,6 +57,10 @@ const EMPTY_DASHBOARD: DashboardData = {
   activeVehicles: [],
   exitedVehicles: [],
   temporaryVisitors: [],
+  guardBuildingId: null,
+  guardBuildingName: null,
+  guardName: null,
+  is_admin: false,
   stats: {
     totalToday: 0,
     insideCount: 0,
@@ -61,17 +76,21 @@ export default function GuardDashboard() {
   const [data, setData] = useState<DashboardData>(EMPTY_DASHBOARD);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0]);
   const [activeTab, setActiveTab] = useState<TabType>('active');
   const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [isVisitorOpen, setIsVisitorOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
+
   const [verifyingProfile, setVerifyingProfile] = useState<any>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [lastActivityCount, setLastActivityCount] = useState(0);
 
-  const fetchData = async (currentSearch: string) => {
+  const fetchData = async (currentSearch: string, date: string) => {
     try {
-      const res = await fetch(`/api/dashboard?search=${encodeURIComponent(currentSearch)}`);
+      const res = await fetch(`/api/dashboard?search=${encodeURIComponent(currentSearch)}&date=${date}`);
       const json = await res.json();
+
       if (!res.ok) {
         if (res.status === 401) window.location.href = '/login';
         throw new Error(json?.error || 'Failed to load dashboard data');
@@ -149,8 +168,9 @@ export default function GuardDashboard() {
       if (res.ok) {
         toast.success(`Entry Authorized for ${verifyingProfile.name}`);
         setVerifyingProfile(null);
-        fetchData(search);
+        fetchData(search, selectedDate);
       } else {
+
         const err = await res.json();
         toast.error(err.error || 'Entry failed');
       }
@@ -160,12 +180,13 @@ export default function GuardDashboard() {
   };
 
   useEffect(() => {
-    fetchData(search);
+    fetchData(search, selectedDate);
     const interval = setInterval(() => {
-      fetchData(search);
+      fetchData(search, selectedDate);
     }, 5000); // 5s refresh for quick updates
     return () => clearInterval(interval);
-  }, [search]);
+  }, [search, selectedDate]);
+
 
   // Activity Monitor (Notifications for exits)
   useEffect(() => {
@@ -186,7 +207,7 @@ export default function GuardDashboard() {
   const isOverstayed = (entryTime: string) => {
     const entry = new Date(entryTime);
     const now = new Date();
-    return (now.getTime() - entry.getTime()) > (12 * 60 * 60 * 1000);
+    return (now.getTime() - entry.getTime()) > (8 * 60 * 60 * 1000);
   };
 
   if (loading && !data.stats.totalToday) {
@@ -204,7 +225,7 @@ export default function GuardDashboard() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 pt-24 md:pt-28 relative overflow-hidden">
+    <main className="min-h-screen bg-background text-foreground p-4 md:p-8 pt-24 md:pt-28 relative overflow-hidden transition-colors duration-500">
       <QRScanner 
         isOpen={isScannerOpen} 
         onClose={() => setIsScannerOpen(false)} 
@@ -215,6 +236,14 @@ export default function GuardDashboard() {
         isOpen={isQROpen} 
         onClose={() => setIsQROpen(false)} 
       />
+
+      <VisitorForm 
+        isOpen={isVisitorOpen}
+        onClose={() => setIsVisitorOpen(false)}
+        onSuccess={() => fetchData(search, selectedDate)}
+      />
+
+
 
       <VerificationModal 
         profile={verifyingProfile} 
@@ -235,38 +264,43 @@ export default function GuardDashboard() {
       <div className="absolute top-[-20%] right-[-10%] w-[50%] h-[50%] bg-accent/10 rounded-full blur-[150px] -z-10" />
       <div className="absolute bottom-[-20%] left-[-10%] w-[50%] h-[50%] bg-purple-600/5 rounded-full blur-[150px] -z-10" />
 
-      <div className="max-w-7xl mx-auto space-y-8">
+      {/* Main Content Area */}
+      <div className="max-w-7xl mx-auto space-y-8 pb-20">
         {/* Top Header */}
         <header className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6">
           <div className="flex items-center justify-between w-full lg:w-auto">
             <div className="flex items-center gap-4">
-              <div className="p-3 bg-accent/20 rounded-2xl border border-accent/30 shadow-[0_0_20px_rgba(37,99,235,0.2)]">
-                <Shield className="w-6 h-6 md:w-8 md:h-8 text-accent" />
-              </div>
               <div>
-                <h1 className="text-2xl md:text-3xl font-black tracking-tighter bg-gradient-to-r from-white to-neutral-400 bg-clip-text text-transparent leading-none">
-                  Guard Console
+                <h1 className="text-2xl font-black tracking-tight flex items-center gap-3">
+                  {data.guardBuildingName ? (
+                    <>
+                      <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
+                        <Shield className="w-4 h-4 text-accent" />
+                      </div>
+                      {data.guardBuildingName} Portal
+                    </>
+                  ) : (
+                    "Security Command"
+                  )}
                 </h1>
-                <div className="flex items-center gap-2 text-neutral-500 text-[10px] md:text-sm font-bold uppercase mt-1">
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-                  Live Security Feed
+                <div className="flex items-center gap-2 text-foreground/50 text-[10px] font-bold uppercase tracking-widest mt-1">
+                  <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
+                  Active Session: {data.guardName || 'Security Officer'}
                 </div>
               </div>
             </div>
-            {/* Mobile Logout Button */}
-            <button 
-              onClick={handleLogout}
-              aria-label="Logout from Guard Dashboard"
-              className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-red-500/10 hover:border-red-500/30 text-neutral-400 hover:text-red-500 lg:hidden transition-all group shrink-0"
-            >
-              <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+
+            
+            {/* Mobile Logout */}
+            <button onClick={handleLogout} className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl lg:hidden">
+              <LogOut className="w-5 h-5 text-neutral-400" />
             </button>
           </div>
+
 
           <div className="flex flex-wrap items-center gap-3 w-full lg:w-auto">
             <button 
               onClick={() => setIsScannerOpen(true)}
-              aria-label="Open QR Scanner for Student Identity"
               className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-accent text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:opacity-90 shadow-xl shadow-accent/20 transition-all"
             >
               <QrCode className="w-4 h-4" />
@@ -274,131 +308,130 @@ export default function GuardDashboard() {
             </button>
 
             <button 
-              onClick={() => setIsQROpen(true)}
-              aria-label="Generate Temporary Pass"
+              onClick={() => setIsVisitorOpen(true)}
               className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-800 hover:text-white transition-all"
             >
               <Users className="w-4 h-4" />
-              Issue Pass
+              Visitor Entry
             </button>
 
-            <Link
-              href="/admin/gate-qr"
-              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-800 hover:text-white transition-all"
-            >
-              <Printer className="w-4 h-4" />
-              Signs
-            </Link>
-
-
             <div className="flex items-center gap-2 w-full lg:w-auto">
-              <button 
-                onClick={handleExportData}
-                aria-label="Download Current View as CSV"
-                className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all group"
-                title="Export Logs"
-              >
-                <Download className="w-5 h-5 group-hover:translate-y-0.5 transition-transform" />
-              </button>
-              <div className="relative flex-1 lg:w-64">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500" />
+               <div className="relative flex-1 lg:w-64">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
                 <input 
                   type="text"
-                  placeholder="Search Vehicle / Name..."
+                  placeholder={data.guardBuildingName ? "Search Student / Name..." : "Search Vehicle / Name..."}
                   value={search}
-                  aria-label="Search vehicles or students by name"
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full bg-neutral-900/50 border border-neutral-800 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all backdrop-blur-md text-sm"
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all backdrop-blur-md text-sm"
                 />
               </div>
+              <div className="relative">
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground/40" />
+                <input 
+                  type="date"
+                  value={selectedDate}
+                  onChange={(e) => setSelectedDate(e.target.value)}
+                  className="w-full bg-foreground/5 border border-foreground/10 rounded-2xl pl-11 pr-4 py-3.5 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all backdrop-blur-md text-sm uppercase font-bold text-[10px] text-foreground"
+                />
+              </div>
+              <button 
+                onClick={handleExportData}
+                className="p-3.5 bg-foreground/5 border border-foreground/10 rounded-2xl hover:bg-accent hover:text-white transition-all text-foreground/40"
+                title="Export History"
+              >
+                <Download className="w-5 h-5" />
+              </button>
             </div>
-            <button 
-              onClick={handleLogout}
-              aria-label="Logout from Guard Dashboard"
-              className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl hover:bg-red-500/10 hover:border-red-500/30 text-neutral-400 hover:text-red-500 transition-all group hidden lg:block"
-            >
-              <LogOut className="w-5 h-5 group-hover:scale-110 transition-transform" />
+            
+            <button onClick={handleLogout} className="p-3.5 bg-red-500/5 border border-red-500/10 rounded-2xl hover:bg-red-500 text-red-500 transition-all hidden lg:block" title="Logout">
+              <LogOut className="w-5 h-5" />
             </button>
           </div>
         </header>
 
-
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          <StatCard 
-            icon={<Car className="w-5 h-5" />} 
-            label="Total Entries Today" 
-            value={data.stats.totalToday} 
-            color="blue" 
-          />
-          <StatCard 
-            icon={<Users className="w-5 h-5" />} 
-            label="Currently Inside" 
-            value={data.stats.insideCount} 
-            color="green" 
-          />
-          <StatCard 
-            icon={<Clock className="w-5 h-5" />} 
-            label="Overstayed (>12h)" 
-            value={data.stats.overstayedCount} 
-            color="orange" 
-            trend={data.stats.overstayedCount > 0 ? "Warning" : "Clear"}
-          />
+          <StatCard icon={data.guardBuildingName ? <User className="w-5 h-5" /> : <Car className="w-5 h-5" />} label={data.guardBuildingName ? "Student Entries" : "Vehicle Entries"} value={data.stats.totalToday} color="blue" />
+          <StatCard icon={<Users className="w-5 h-5" />} label="Currently Inside" value={data.stats.insideCount} color="green" />
+          <StatCard icon={<Clock className="w-5 h-5" />} label="Overstayed" value={data.stats.overstayedCount} color="orange" trend={data.stats.overstayedCount > 0 ? "Warning" : "Clear"} />
           <div className="bg-neutral-900/40 border border-neutral-800 rounded-3xl p-6 flex flex-col justify-center gap-2 backdrop-blur-md">
-            <p className="text-neutral-500 text-xs font-bold uppercase tracking-widest">Reports</p>
-            <Link 
-              href="/data/vehicle_logs.csv" 
-              className="flex items-center justify-between group hover:text-accent transition-colors"
-            >
-              <span className="text-sm font-semibold">Download Audit Log</span>
-              <Download className="w-4 h-4 group-hover:translate-y-1 transition-transform" />
+            <p className="text-neutral-500 text-[10px] font-black uppercase tracking-widest">Global Reports</p>
+            <Link href="/admin/dashboard" className="flex items-center justify-between group hover:text-accent transition-colors">
+              <span className="text-sm font-bold">Admin Core View</span>
+              <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
             </Link>
           </div>
         </div>
 
+        {/* Records Display Area */}
+        <div className="min-h-[500px]">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.2 }}
+            >
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+                <h2 className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
+                  {activeTab === 'active' && <>{data.guardBuildingName ? <User className="w-5 h-5 text-accent" /> : <Car className="w-5 h-5 text-accent" />} Active {data.guardBuildingName ? "Entries" : "Vehicles"}</>}
+                  {activeTab === 'temporary' && <><Users className="w-5 h-5 text-purple-400" /> Temporary Visitors</>}
+                  {activeTab === 'exited' && <><Clock className="w-5 h-5 text-neutral-500" /> {data.guardBuildingName ? "Entry History" : "Exited History"}</>}
+                </h2>
+                
+                <div className="flex items-center gap-3">
+                  {activeTab === 'exited' && (
+                    <div className="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-2xl">
+                      <Calendar className="w-4 h-4 text-neutral-500" />
+                      <input 
+                        type="date" 
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="bg-transparent text-xs font-bold text-neutral-300 focus:outline-none"
+                      />
+                    </div>
+                  )}
+                  <span className="text-[10px] font-black bg-white/5 border border-white/10 px-3 py-1 rounded-full uppercase tracking-[0.2em]">
+                    {activeTab === 'active' ? data.activeVehicles.length : activeTab === 'temporary' ? data.temporaryVisitors.length : data.exitedVehicles.length} Records
+                  </span>
+                </div>
+              </div>
 
+              
+              {activeTab === 'active' && <RecordList items={data.activeVehicles || []} type="active" isOverstayed={isOverstayed} />}
+              {activeTab === 'temporary' && <RecordList items={data.temporaryVisitors || []} type="temporary" />}
+              {activeTab === 'exited' && <RecordList items={data.exitedVehicles || []} type="exited" />}
+            </motion.div>
+          </AnimatePresence>
+        </div>
+      </div>
 
-        {/* Tabs and Content */}
-        <div className="space-y-6">
-          <div className="flex flex-wrap items-center gap-2 p-1.5 bg-neutral-950 border border-neutral-800 rounded-2xl w-fit">
-            <TabButton 
-              active={activeTab === 'active'} 
-              onClick={() => setActiveTab('active')} 
-              icon={<Car className="w-4 h-4" />}
-              label="Active Vehicles"
-              count={data.activeVehicles?.length || 0}
-            />
-            <TabButton 
-              active={activeTab === 'temporary'} 
-              onClick={() => setActiveTab('temporary')} 
-              icon={<Users className="w-4 h-4" />}
-              label="Temporary Visitors"
-              count={data.temporaryVisitors?.length || 0}
-            />
-            <TabButton 
-              active={activeTab === 'exited'} 
-              onClick={() => setActiveTab('exited')} 
-              icon={<Clock className="w-4 h-4" />}
-              label="Exited History"
-              count={data.exitedVehicles?.length || 0}
-            />
-          </div>
-
-          <div className="min-h-[500px]">
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={activeTab}
-                initial={{ opacity: 0, x: 10 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
-                transition={{ duration: 0.2 }}
-              >
-                {activeTab === 'active' && <RecordList items={data.activeVehicles || []} type="active" isOverstayed={isOverstayed} />}
-                {activeTab === 'temporary' && <RecordList items={data.temporaryVisitors || []} type="temporary" />}
-                {activeTab === 'exited' && <RecordList items={data.exitedVehicles || []} type="exited" />}
-              </motion.div>
-            </AnimatePresence>
-          </div>
+      {/* Fixed Bottom Navigation Dock */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
+        <div className="bg-neutral-900/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-2 flex items-center justify-between shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]">
+          <DockItem 
+            active={activeTab === 'active'} 
+            onClick={() => setActiveTab('active')} 
+            icon={data.guardBuildingName ? <User className="w-5 h-5" /> : <Car className="w-5 h-5" />} 
+            label={data.guardBuildingName ? "Entries" : "Active"}
+            count={data.activeVehicles?.length}
+          />
+          <DockItem 
+            active={activeTab === 'temporary'} 
+            onClick={() => setActiveTab('temporary')} 
+            icon={<Users className="w-5 h-5" />} 
+            label="Visitors"
+            count={data.temporaryVisitors?.length}
+          />
+          <DockItem 
+            active={activeTab === 'exited'} 
+            onClick={() => setActiveTab('exited')} 
+            icon={<Clock className="w-5 h-5" />} 
+            label="History"
+            count={data.exitedVehicles?.length}
+          />
         </div>
       </div>
     </main>
@@ -430,29 +463,32 @@ function StatCard({ icon, label, value, color, trend }: any) {
   );
 }
 
-function TabButton({ active, onClick, icon, label, count }: any) {
+function DockItem({ active, onClick, icon, label, count }: any) {
   return (
-    <button
+    <button 
       onClick={onClick}
-      className={`
-        flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all
-        ${active 
-          ? 'bg-accent text-white shadow-[0_0_15px_rgba(37,99,235,0.3)]' 
-          : 'text-neutral-500 hover:text-neutral-300 hover:bg-neutral-900'
-        }
-      `}
+      className={`flex-1 flex flex-col items-center gap-1 py-3 px-2 rounded-[2rem] transition-all relative ${active ? 'text-white' : 'text-neutral-500'}`}
     >
-      {icon}
-      {label}
-      <span className={`
-        text-[10px] px-1.5 py-0.5 rounded-md font-bold
-        ${active ? 'bg-white/20 text-white' : 'bg-neutral-800 text-neutral-500'}
-      `}>
-        {count}
-      </span>
+      {active && (
+        <motion.div 
+          layoutId="dock-active"
+          className="absolute inset-0 bg-accent rounded-[2rem] -z-10"
+          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+        />
+      )}
+      <div className="relative">
+        {icon}
+        {count > 0 && (
+          <span className={`absolute -top-2 -right-2 text-[8px] font-black px-1 rounded-md ${active ? 'bg-white text-accent' : 'bg-neutral-800 text-neutral-400'}`}>
+            {count}
+          </span>
+        )}
+      </div>
+      <span className="text-[10px] font-black uppercase tracking-tighter">{label}</span>
     </button>
   );
 }
+
 
 function RecordList({ items, type, isOverstayed }: any) {
   if (items.length === 0) {
