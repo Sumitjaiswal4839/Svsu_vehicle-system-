@@ -6,8 +6,9 @@ import { logAudit } from '@/lib/audit';
 import { verifyActiveSession } from '@/lib/auth';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
+import { logger } from '@/lib/logger';
+import { sanitizeString } from '@/lib/sanitize';
 
 
 export async function POST(request: Request) {
@@ -36,19 +37,24 @@ export async function POST(request: Request) {
     const { 
       profileId, 
       isTemporary, 
-      visitorName, 
-      visitorPurpose, 
-      visitorContact, 
+      visitorName: rawVisitorName, 
+      visitorPurpose: rawVisitorPurpose, 
+      visitorContact: rawVisitorContact, 
       visitorPhoto,
       vehicleNo,
       // Legacy fields from old form
-      fullName,
+      fullName: rawFullName,
       rollNo,
       faculty,
       course,
       semester,
       photoUrl
     } = body;
+
+    const visitorName = rawVisitorName ? sanitizeString(rawVisitorName) : rawVisitorName;
+    const visitorPurpose = rawVisitorPurpose ? sanitizeString(rawVisitorPurpose) : rawVisitorPurpose;
+    const visitorContact = rawVisitorContact ? sanitizeString(rawVisitorContact) : rawVisitorContact;
+    const fullName = rawFullName ? sanitizeString(rawFullName) : rawFullName;
 
     let finalPhotoUrl = visitorPhoto || photoUrl;
 
@@ -112,7 +118,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: 'Entry registered successfully', entry }, { status: 201 });
   } catch (error) {
-    console.error('Entry API Error:', error);
+    logger.error('Entry API failed', { error: String(error) });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

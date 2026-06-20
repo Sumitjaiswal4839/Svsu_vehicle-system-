@@ -86,13 +86,13 @@ export default function QRScanner({ onScanSuccess, isOpen, onClose }: QRScannerP
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-[2.5rem] overflow-hidden shadow-2xl"
+            className="relative w-full max-w-lg bg-card border border-border rounded-[2.5rem] overflow-hidden shadow-2xl"
           >
             {/* Header */}
-            <div className="flex items-center justify-between p-6 border-b border-neutral-800 bg-neutral-950/50">
+            <div className="flex items-center justify-between p-6 border-b border-border bg-foreground/[0.03]">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-accent/20 rounded-xl">
-                  <QrCode className="w-5 h-5 text-accent" />
+                  <QrCode className="w-5 h-5 text-[color:var(--accent)]" />
                 </div>
                 <div>
                   <h3 className="font-bold text-lg">QR Scanner</h3>
@@ -109,7 +109,7 @@ export default function QRScanner({ onScanSuccess, isOpen, onClose }: QRScannerP
 
             {/* Scanner Area */}
             <div className="p-6">
-              <div className="relative aspect-square rounded-3xl overflow-hidden bg-black border border-neutral-800 shadow-inner">
+              <div className="relative aspect-square rounded-3xl overflow-hidden bg-black border border-border shadow-inner">
                 {!success && <div id="reader" className="w-full h-full"></div>}
                 
                 {success && (
@@ -144,8 +144,8 @@ export default function QRScanner({ onScanSuccess, isOpen, onClose }: QRScannerP
                   Align the QR code within the frame to scan
                 </div>
                 
-                <div className="w-full p-4 bg-neutral-950 border border-neutral-800 rounded-2xl flex items-center gap-3">
-                  <AlertCircle className="w-5 h-5 text-accent shrink-0" />
+                <div className="w-full p-4 bg-background border border-border rounded-2xl flex items-center gap-3">
+                  <AlertCircle className="w-5 h-5 text-[color:var(--accent)] shrink-0" />
                   <p className="text-[10px] text-neutral-400 text-left leading-relaxed">
                     Scanner handles both permanent vehicle IDs and temporary visitor passes. 
                     Authorization is logged instantly.

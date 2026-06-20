@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, 
@@ -43,10 +44,13 @@ interface DashboardData {
   guardBuildingName: string | null;
   guardName: string | null;
   is_admin: boolean;
-
-
+  pagination?: {
+    page: number;
+    limit: number;
+    totalPages: number;
+    totalExited: number;
+  };
   stats: {
-
     totalToday: number;
     insideCount: number;
     overstayedCount: number;
@@ -85,22 +89,39 @@ export default function GuardDashboard() {
   const [verifyingProfile, setVerifyingProfile] = useState<any>(null);
   const [isVerifying, setIsVerifying] = useState(false);
   const [lastActivityCount, setLastActivityCount] = useState(0);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [loadingMore, setLoadingMore] = useState(false);
 
-  const fetchData = async (currentSearch: string, date: string) => {
+  const fetchData = async (currentSearch: string, date: string, page = 1, append = false) => {
     try {
-      const res = await fetch(`/api/dashboard?search=${encodeURIComponent(currentSearch)}&date=${date}`);
+      const res = await fetch(`/api/dashboard?search=${encodeURIComponent(currentSearch)}&date=${date}&page=${page}&limit=20`);
       const json = await res.json();
 
       if (!res.ok) {
         if (res.status === 401) window.location.href = '/login';
         throw new Error(json?.error || 'Failed to load dashboard data');
       }
-      setData(json);
+      if (append) {
+        setData(prev => ({
+          ...json,
+          exitedVehicles: [...prev.exitedVehicles, ...json.exitedVehicles],
+        }));
+      } else {
+        setData(json);
+      }
     } catch (err) {
       console.error(err);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
     }
+  };
+
+  const handleLoadMore = async () => {
+    const nextPage = historyPage + 1;
+    setHistoryPage(nextPage);
+    setLoadingMore(true);
+    await fetchData(search, selectedDate, nextPage, true);
   };
 
   const handleExportData = () => {
@@ -180,9 +201,10 @@ export default function GuardDashboard() {
   };
 
   useEffect(() => {
-    fetchData(search, selectedDate);
+    fetchData(search, selectedDate, 1, false);
+    setHistoryPage(1);
     const interval = setInterval(() => {
-      fetchData(search, selectedDate);
+      fetchData(search, selectedDate, 1, false);
     }, 5000); // 5s refresh for quick updates
     return () => clearInterval(interval);
   }, [search, selectedDate]);
@@ -217,7 +239,7 @@ export default function GuardDashboard() {
           animate={{ rotate: 360 }}
           transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <Shield className="w-12 h-12 text-accent" />
+          <Shield className="w-12 h-12 text-[color:var(--accent)]" />
         </motion.div>
         <p className="text-neutral-500 font-medium animate-pulse">Initializing Guard Dashboard...</p>
       </div>
@@ -254,7 +276,7 @@ export default function GuardDashboard() {
       {isVerifying && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="flex flex-col items-center gap-4">
-            <Smartphone className="w-12 h-12 text-accent animate-bounce" />
+            <Smartphone className="w-12 h-12 text-[color:var(--accent)] animate-bounce" />
             <p className="text-white font-bold animate-pulse">Scanning Database...</p>
           </div>
         </div>
@@ -275,7 +297,7 @@ export default function GuardDashboard() {
                   {data.guardBuildingName ? (
                     <>
                       <div className="w-8 h-8 bg-accent/10 rounded-lg flex items-center justify-center">
-                        <Shield className="w-4 h-4 text-accent" />
+                        <Shield className="w-4 h-4 text-[color:var(--accent)]" />
                       </div>
                       {data.guardBuildingName} Portal
                     </>
@@ -292,7 +314,7 @@ export default function GuardDashboard() {
 
             
             {/* Mobile Logout */}
-            <button onClick={handleLogout} className="p-3.5 bg-neutral-900/50 border border-neutral-800 rounded-2xl lg:hidden">
+            <button onClick={handleLogout} aria-label="Logout" className="p-3.5 bg-card/60 border border-border rounded-2xl lg:hidden">
               <LogOut className="w-5 h-5 text-neutral-400" />
             </button>
           </div>
@@ -309,7 +331,7 @@ export default function GuardDashboard() {
 
             <button 
               onClick={() => setIsVisitorOpen(true)}
-              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-neutral-900/50 border border-neutral-800 text-neutral-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-800 hover:text-white transition-all"
+              className="flex-1 lg:flex-none flex items-center justify-center gap-2 px-6 py-3.5 bg-card/60 border border-border text-neutral-400 rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-neutral-800 hover:text-white transition-all"
             >
               <Users className="w-4 h-4" />
               Visitor Entry
@@ -338,13 +360,14 @@ export default function GuardDashboard() {
               <button 
                 onClick={handleExportData}
                 className="p-3.5 bg-foreground/5 border border-foreground/10 rounded-2xl hover:bg-accent hover:text-white transition-all text-foreground/40"
+                aria-label="Export History"
                 title="Export History"
               >
                 <Download className="w-5 h-5" />
               </button>
             </div>
             
-            <button onClick={handleLogout} className="p-3.5 bg-red-500/5 border border-red-500/10 rounded-2xl hover:bg-red-500 text-red-500 transition-all hidden lg:block" title="Logout">
+            <button onClick={handleLogout} aria-label="Logout" className="p-3.5 bg-red-500/5 border border-red-500/10 rounded-2xl hover:bg-red-500 text-red-500 transition-all hidden lg:block" title="Logout">
               <LogOut className="w-5 h-5" />
             </button>
           </div>
@@ -355,9 +378,9 @@ export default function GuardDashboard() {
           <StatCard icon={data.guardBuildingName ? <User className="w-5 h-5" /> : <Car className="w-5 h-5" />} label={data.guardBuildingName ? "Student Entries" : "Vehicle Entries"} value={data.stats.totalToday} color="blue" />
           <StatCard icon={<Users className="w-5 h-5" />} label="Currently Inside" value={data.stats.insideCount} color="green" />
           <StatCard icon={<Clock className="w-5 h-5" />} label="Overstayed" value={data.stats.overstayedCount} color="orange" trend={data.stats.overstayedCount > 0 ? "Warning" : "Clear"} />
-          <div className="bg-neutral-900/40 border border-neutral-800 rounded-3xl p-6 flex flex-col justify-center gap-2 backdrop-blur-md">
+          <div className="bg-card/80 border border-border rounded-3xl p-6 flex flex-col justify-center gap-2 backdrop-blur-md">
             <p className="text-neutral-500 text-[10px] font-black uppercase tracking-widest">Global Reports</p>
-            <Link href="/admin/dashboard" className="flex items-center justify-between group hover:text-accent transition-colors">
+            <Link href="/admin/dashboard" className="flex items-center justify-between group hover:text-[color:var(--accent)] transition-colors">
               <span className="text-sm font-bold">Admin Core View</span>
               <ShieldCheck className="w-4 h-4 group-hover:scale-110 transition-transform" />
             </Link>
@@ -376,14 +399,14 @@ export default function GuardDashboard() {
             >
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                 <h2 className="text-xl font-black uppercase tracking-tight flex items-center gap-3">
-                  {activeTab === 'active' && <>{data.guardBuildingName ? <User className="w-5 h-5 text-accent" /> : <Car className="w-5 h-5 text-accent" />} Active {data.guardBuildingName ? "Entries" : "Vehicles"}</>}
+                  {activeTab === 'active' && <>{data.guardBuildingName ? <User className="w-5 h-5 text-[color:var(--accent)]" /> : <Car className="w-5 h-5 text-[color:var(--accent)]" />} Active {data.guardBuildingName ? "Entries" : "Vehicles"}</>}
                   {activeTab === 'temporary' && <><Users className="w-5 h-5 text-purple-400" /> Temporary Visitors</>}
                   {activeTab === 'exited' && <><Clock className="w-5 h-5 text-neutral-500" /> {data.guardBuildingName ? "Entry History" : "Exited History"}</>}
                 </h2>
                 
                 <div className="flex items-center gap-3">
                   {activeTab === 'exited' && (
-                    <div className="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-2xl">
+                    <div className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-2xl">
                       <Calendar className="w-4 h-4 text-neutral-500" />
                       <input 
                         type="date" 
@@ -402,7 +425,27 @@ export default function GuardDashboard() {
               
               {activeTab === 'active' && <RecordList items={data.activeVehicles || []} type="active" isOverstayed={isOverstayed} />}
               {activeTab === 'temporary' && <RecordList items={data.temporaryVisitors || []} type="temporary" />}
-              {activeTab === 'exited' && <RecordList items={data.exitedVehicles || []} type="exited" />}
+              {activeTab === 'exited' && (
+                <>
+                  <RecordList items={data.exitedVehicles || []} type="exited" />
+                  {data.pagination && historyPage < data.pagination.totalPages && (
+                    <div className="flex justify-center mt-8">
+                      <button
+                        onClick={handleLoadMore}
+                        disabled={loadingMore}
+                        className="flex items-center gap-2 px-8 py-3 bg-card border border-border rounded-2xl text-sm font-bold hover:border-accent/40 transition-all disabled:opacity-50"
+                      >
+                        {loadingMore ? (
+                          <span className="animate-spin w-4 h-4 border-2 border-accent border-t-transparent rounded-full" />
+                        ) : (
+                          <ChevronRight className="w-4 h-4 rotate-90" />
+                        )}
+                        Load More ({data.pagination.totalExited - data.exitedVehicles.length} remaining)
+                      </button>
+                    </div>
+                  )}
+                </>
+              )}
             </motion.div>
           </AnimatePresence>
         </div>
@@ -410,7 +453,7 @@ export default function GuardDashboard() {
 
       {/* Fixed Bottom Navigation Dock */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-md px-6 z-50">
-        <div className="bg-neutral-900/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-2 flex items-center justify-between shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]">
+        <div className="bg-card/90 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-2 flex items-center justify-between shadow-[0_30px_60px_-15px_rgba(0,0,0,0.8)]">
           <DockItem 
             active={activeTab === 'active'} 
             onClick={() => setActiveTab('active')} 
@@ -446,7 +489,7 @@ function StatCard({ icon, label, value, color, trend }: any) {
   };
 
   return (
-    <div className="bg-neutral-900/40 border border-neutral-800 rounded-3xl p-6 backdrop-blur-md">
+    <div className="bg-card/80 border border-border rounded-3xl p-6 backdrop-blur-md">
       <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${colors[color]}`}>
         {icon}
       </div>
@@ -479,7 +522,7 @@ function DockItem({ active, onClick, icon, label, count }: any) {
       <div className="relative">
         {icon}
         {count > 0 && (
-          <span className={`absolute -top-2 -right-2 text-[8px] font-black px-1 rounded-md ${active ? 'bg-white text-accent' : 'bg-neutral-800 text-neutral-400'}`}>
+          <span className={`absolute -top-2 -right-2 text-[8px] font-black px-1 rounded-md ${active ? 'bg-white text-[color:var(--accent)]' : 'bg-neutral-800 text-neutral-400'}`}>
             {count}
           </span>
         )}
@@ -493,7 +536,7 @@ function DockItem({ active, onClick, icon, label, count }: any) {
 function RecordList({ items, type, isOverstayed }: any) {
   if (items.length === 0) {
     return (
-      <div className="bg-neutral-950/50 border border-dashed border-neutral-800 rounded-[2.5rem] flex flex-col items-center justify-center p-20 text-neutral-600">
+      <div className="bg-foreground/[0.03] border border-dashed border-border rounded-[2.5rem] flex flex-col items-center justify-center p-20 text-neutral-600">
         <Shield className="w-16 h-16 mb-4 opacity-10" />
         <p className="text-lg font-medium">No records found</p>
         <p className="text-sm">Real-time data will appear here.</p>
@@ -523,8 +566,8 @@ function RecordCard({ item, type, overstay }: any) {
     <motion.div 
       layout
       className={`
-        relative overflow-hidden bg-neutral-950 border rounded-3xl p-5 group transition-all duration-300
-        ${overstay ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.1)]' : 'border-neutral-800 hover:border-accent/40'}
+        relative overflow-hidden bg-background border rounded-3xl p-5 group transition-all duration-300
+        ${overstay ? 'border-red-500/50 shadow-[0_0_20px_rgba(239,68,68,0.1)]' : 'border-border hover:border-accent/40'}
       `}
     >
       {overstay && (
@@ -535,7 +578,7 @@ function RecordCard({ item, type, overstay }: any) {
 
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className={`p-2 rounded-xl ${isTemp ? 'bg-purple-500/10 text-purple-400' : 'bg-accent/10 text-accent'}`}>
+          <div className={`p-2 rounded-xl ${isTemp ? 'bg-purple-500/10 text-purple-400' : 'bg-accent/10 text-[color:var(--accent)]'}`}>
             {isTemp ? <Users className="w-4 h-4" /> : <Shield className="w-4 h-4" />}
           </div>
           <div>
@@ -548,7 +591,7 @@ function RecordCard({ item, type, overstay }: any) {
           </div>
         </div>
         <div className="text-right">
-          <p className={`font-mono font-bold text-sm ${overstay ? 'text-red-500' : 'text-accent'}`}>
+          <p className={`font-mono font-bold text-sm ${overstay ? 'text-red-500' : 'text-[color:var(--accent)]'}`}>
             {item.vehicleNo || profile.vehicleNo}
           </p>
           <div className="text-[10px] text-neutral-500 flex items-center justify-end gap-1">
@@ -560,17 +603,17 @@ function RecordCard({ item, type, overstay }: any) {
 
       <div className="space-y-2 mb-4">
         {isTemp ? (
-          <div className="bg-neutral-900/50 rounded-xl p-3 space-y-1">
+          <div className="bg-card/60 rounded-xl p-3 space-y-1">
             <p className="text-[10px] text-neutral-500 font-bold uppercase">Purpose of Visit</p>
             <p className="text-xs text-neutral-300 line-clamp-2">{item.visitorPurpose || 'N/A'}</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-2">
-            <div className="bg-neutral-900/50 rounded-xl p-2">
+            <div className="bg-card/60 rounded-xl p-2">
               <p className="text-[10px] text-neutral-500 font-bold uppercase">Roll No</p>
               <p className="text-xs font-semibold">{profile.rollNo}</p>
             </div>
-            <div className="bg-neutral-900/50 rounded-xl p-2">
+            <div className="bg-card/60 rounded-xl p-2">
               <p className="text-[10px] text-neutral-500 font-bold uppercase">Course</p>
               <p className="text-xs font-semibold truncate">{profile.course}</p>
             </div>
@@ -582,9 +625,11 @@ function RecordCard({ item, type, overstay }: any) {
         <div className="flex items-center gap-2">
           {item.visitorPhoto || profile.rcPhoto ? (
             <div className="w-6 h-6 rounded-full overflow-hidden bg-neutral-800">
-               <img 
+               <Image 
                 src={item.visitorPhoto || profile.rcPhoto} 
                 alt="Profile" 
+                width={24}
+                height={24}
                 className="w-full h-full object-cover" 
               />
             </div>
@@ -633,7 +678,7 @@ function VerificationModal({ profile, onClose, onAuthorize }: any) {
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
-          className="w-full max-w-md bg-neutral-900 border-2 border-neutral-800 rounded-[3rem] overflow-hidden shadow-2xl relative"
+          className="w-full max-w-md bg-card border-2 border-border rounded-[3rem] overflow-hidden shadow-2xl relative"
         >
           {/* Header/Vehicle Number */}
           <div className="bg-accent p-6 text-center">
@@ -646,9 +691,9 @@ function VerificationModal({ profile, onClose, onAuthorize }: any) {
             <div className="flex justify-center">
               <div className="relative group">
                 <div className="absolute inset-0 bg-accent/20 rounded-[2.5rem] blur-2xl group-hover:bg-accent/40 transition-all" />
-                <div className="relative w-48 h-48 rounded-[2.5rem] border-4 border-neutral-800 overflow-hidden bg-neutral-950">
+                <div className="relative w-48 h-48 rounded-[2.5rem] border-4 border-border overflow-hidden bg-background">
                   {profile.profilePhoto ? (
-                    <img src={profile.profilePhoto} alt="Student" className="w-full h-full object-cover" />
+                    <Image src={profile.profilePhoto} alt="Student" fill className="object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center bg-neutral-800">
                       <User className="w-20 h-20 text-neutral-600" />
@@ -659,10 +704,10 @@ function VerificationModal({ profile, onClose, onAuthorize }: any) {
             </div>
 
             {/* User Details */}
-            <div className="bg-neutral-950/50 border border-neutral-800 rounded-3xl p-6 space-y-4">
+            <div className="bg-foreground/[0.03] border border-border rounded-3xl p-6 space-y-4">
               <div className="flex items-center gap-4">
                 <div className="p-3 bg-accent/10 rounded-2xl">
-                  <User className="w-5 h-5 text-accent" />
+                  <User className="w-5 h-5 text-[color:var(--accent)]" />
                 </div>
                 <div>
                   <p className="text-[10px] text-neutral-500 font-bold uppercase tracking-widest">Full Name</p>

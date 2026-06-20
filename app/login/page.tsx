@@ -41,7 +41,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative overflow-x-hidden overflow-y-auto">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative overflow-x-hidden overflow-y-auto">
       {/* Background Orbs */}
       <div className="absolute top-[-20%] left-[-20%] w-[60%] h-[60%] bg-accent/10 rounded-full blur-[150px] -z-10" />
       <div className="absolute bottom-[-20%] right-[-20%] w-[60%] h-[60%] bg-purple-600/5 rounded-full blur-[150px] -z-10" />
@@ -49,11 +49,11 @@ export default function LoginPage() {
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl my-auto"
+        className="w-full max-w-md bg-card/80 border border-border p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl my-auto"
       >
         <div className="flex flex-col items-center mb-10 text-center">
           <div className="p-4 bg-accent/20 rounded-2xl border border-accent/30 shadow-[0_0_20px_rgba(37,99,235,0.2)] mb-6">
-            <Shield className="w-10 h-10 text-accent" />
+            <Shield className="w-10 h-10 text-[color:var(--accent)]" />
           </div>
           <h1 className="text-3xl font-black tracking-tight mb-2">Secure Login</h1>
           <p className="text-neutral-500 text-sm">Authorized Personnel Only</p>
@@ -69,7 +69,7 @@ export default function LoginPage() {
                 type="text"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                 placeholder="Enter guard ID"
               />
             </div>
@@ -84,7 +84,7 @@ export default function LoginPage() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                 placeholder="••••••••"
               />
             </div>

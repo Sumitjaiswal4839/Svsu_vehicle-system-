@@ -1,10 +1,6 @@
-import fs from 'fs';
-import path from 'path';
+import { prisma } from './prisma';
 
-const LOG_DIR = path.join(process.cwd(), 'data');
-const CSV_PATH = path.join(LOG_DIR, 'vehicle_logs.csv');
-
-export async function logToCSV(data: {
+export interface ActivityLogData {
   type: 'ENTRY' | 'EXIT';
   fullName: string;
   rollNo: string;
@@ -13,18 +9,28 @@ export async function logToCSV(data: {
   semester: string;
   vehicleNo: string;
   timestamp: string;
-}) {
-  if (!fs.existsSync(LOG_DIR)) {
-    fs.mkdirSync(LOG_DIR, { recursive: true });
-  }
+}
 
-  const isNewFile = !fs.existsSync(CSV_PATH);
-  const header = 'Type,FullName,RollNo,Faculty,Course,Semester,VehicleNo,Timestamp\n';
-  const row = `${data.type},"${data.fullName}","${data.rollNo}","${data.faculty}","${data.course}","${data.semester}","${data.vehicleNo}",${data.timestamp}\n`;
-
-  if (isNewFile) {
-    fs.writeFileSync(CSV_PATH, header + row);
-  } else {
-    fs.appendFileSync(CSV_PATH, row);
+/**
+ * Logs vehicle entry/exit to the database ActivityLog table.
+ * Replaces the old fs-based CSV logging which doesn't work on Vercel serverless.
+ */
+export async function logToCSV(data: ActivityLogData) {
+  try {
+    await (prisma as any).activityLog.create({
+      data: {
+        type: data.type,
+        fullName: data.fullName,
+        rollNo: data.rollNo,
+        faculty: data.faculty,
+        course: data.course,
+        semester: data.semester,
+        vehicleNo: data.vehicleNo,
+        timestamp: new Date(data.timestamp),
+      },
+    });
+  } catch (error) {
+    // Silent fail — logging should never break the main flow
+    console.error('[ActivityLog] Failed to log activity:', error);
   }
 }

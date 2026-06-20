@@ -2,11 +2,26 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { headers } from 'next/headers';
+import { checkRateLimit, resetRateLimit } from '@/lib/rate-limit';
+import { JWT_SECRET } from '@/lib/jwt';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+
+    // Rate limiting — 5 attempts per 15 minutes per IP
+    const rateLimit = checkRateLimit(`student:${ip}`);
+    if (!rateLimit.allowed) {
+      const minutes = Math.ceil(rateLimit.resetIn / 60000);
+      return NextResponse.json(
+        { error: `Too many login attempts. Try again in ${minutes} minute${minutes > 1 ? 's' : ''}.` },
+        { status: 429 }
+      );
+    }
+
     const { rollNo, password } = await request.json();
 
     if (!rollNo || !password) {
@@ -26,6 +41,9 @@ export async function POST(request: Request) {
     if (!passwordMatch) {
       return NextResponse.json({ error: 'Invalid password. Please try again.' }, { status: 401 });
     }
+
+    // Reset rate limit on successful login
+    resetRateLimit(`student:${ip}`);
 
     // Update last login timestamp
     await prisma.userVehicleProfile.update({
@@ -61,7 +79,7 @@ export async function POST(request: Request) {
 
     return response;
   } catch (error) {
-    console.error('Student Login Error:', error);
+    logger.error('Student login failed', { error: String(error) });
     return NextResponse.json({ error: 'Login failed due to server error' }, { status: 500 });
   }
 }

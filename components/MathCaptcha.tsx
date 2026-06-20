@@ -46,7 +46,7 @@ export default function MathCaptcha({ onVerify }: CaptchaProps) {
     <div className="space-y-3">
       <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Human Verification</label>
       <div className="flex items-center gap-3">
-        <div className="flex-1 bg-neutral-950 border border-neutral-800 rounded-2xl px-4 py-3 flex items-center justify-between group overflow-hidden relative">
+        <div className="flex-1 bg-background border border-border rounded-2xl px-4 py-3 flex items-center justify-between group overflow-hidden relative">
           <div className="absolute inset-0 bg-accent/5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
           <span className="text-lg font-black tracking-widest text-neutral-300 select-none italic">
             {num1} + {num2} = ?
@@ -54,7 +54,7 @@ export default function MathCaptcha({ onVerify }: CaptchaProps) {
           <button 
             type="button"
             onClick={generateCaptcha}
-            className="p-2 hover:bg-neutral-800 rounded-xl transition-colors text-neutral-500 hover:text-accent"
+            className="p-2 hover:bg-neutral-800 rounded-xl transition-colors text-neutral-500 hover:text-[color:var(--accent)]"
           >
             <RefreshCw className="w-4 h-4" />
           </button>
@@ -64,8 +64,8 @@ export default function MathCaptcha({ onVerify }: CaptchaProps) {
           value={userInput}
           onChange={handleInputChange}
           placeholder="Ans"
-          className={`w-24 bg-neutral-950 border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 transition-all font-bold text-center ${
-            isError ? 'border-red-500/50 ring-red-500/20' : 'border-neutral-800 focus:ring-accent/40'
+          className={`w-24 bg-background border rounded-2xl px-4 py-3 focus:outline-none focus:ring-2 transition-all font-bold text-center ${
+            isError ? 'border-red-500/50 ring-red-500/20' : 'border-border focus:ring-accent/40'
           }`}
         />
       </div>

@@ -1,5 +1,14 @@
 @import "tailwindcss";
 
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-border: var(--border);
+  --color-accent: var(--accent);
+  --color-accent-blue: var(--accent-blue);
+}
+
 .watermark {
   position: fixed;
   top: 50%;
@@ -11,30 +20,33 @@
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-  opacity: 0.05;
+  opacity: 0.04;
   pointer-events: none;
   z-index: -1;
-  filter: grayscale(1) brightness(1.5);
+  filter: grayscale(1) brightness(2);
 }
 
 :root {
   --font-geist-sans: "Inter", Arial, sans-serif;
   --font-geist-mono: "Fira Code", monospace;
-  --background: #EFF0DF;
-  --foreground: #2D2D2D;
-  --card: #F1E68A;
-  --border: #BBBBBB;
-  --accent: #9489C2;
-  --accent-blue: #77B5D6;
+
+  /* Light mode — clean slate white with blue tint */
+  --background: #F0F4FF;
+  --foreground: #0F172A;
+  --card: #FFFFFF;
+  --border: #CBD5E1;
+  --accent: #4F46E5;       /* Indigo */
+  --accent-blue: #0EA5E9;  /* Sky blue */
 }
 
 .dark {
-  --background: #09090b;
-  --foreground: #fafafa;
-  --card: #18181b;
-  --border: #27272a;
-  --accent: #9489C2; /* Keep purple for consistency */
-  --accent-blue: #373380;
+  /* Dark mode — deep navy, NOT pure black */
+  --background: #0D1117;   /* GitHub-style deep navy */
+  --foreground: #E2E8F0;
+  --card: #161B22;         /* Slightly lighter navy */
+  --border: #21262D;
+  --accent: #6366F1;       /* Bright indigo */
+  --accent-blue: #38BDF8;  /* Sky blue */
 }
 
 html, body {
@@ -56,5 +68,20 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--accent);
 }
 

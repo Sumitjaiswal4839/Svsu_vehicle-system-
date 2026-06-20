@@ -52,7 +52,7 @@ export default function QRGenerator({ isOpen, onClose }: { isOpen: boolean, onCl
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-2xl bg-neutral-900 border border-neutral-800 p-8 rounded-[2rem] shadow-2xl overflow-y-auto max-h-[90vh]"
+            className="relative w-full max-w-2xl bg-card border border-border p-8 rounded-[2rem] shadow-2xl overflow-y-auto max-h-[90vh]"
           >
             {/* Close Button */}
             <button 
@@ -64,7 +64,7 @@ export default function QRGenerator({ isOpen, onClose }: { isOpen: boolean, onCl
 
             <div className="flex items-center gap-4 mb-6">
               <div className="p-2.5 bg-accent/20 rounded-xl">
-                <QrCode className="w-6 h-6 text-accent" />
+                <QrCode className="w-6 h-6 text-[color:var(--accent)]" />
               </div>
               <div>
                 <h3 className="text-xl font-bold">Quick QR Generator</h3>
@@ -83,7 +83,7 @@ export default function QRGenerator({ isOpen, onClose }: { isOpen: boolean, onCl
                       value={vehicleNo}
                       onChange={(e) => setVehicleNo(e.target.value)}
                       placeholder="UP 81 AB 1234"
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all uppercase font-mono font-bold"
+                      className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all uppercase font-mono font-bold"
                     />
                   </div>
                 </div>
@@ -112,7 +112,7 @@ export default function QRGenerator({ isOpen, onClose }: { isOpen: boolean, onCl
                       <p className="text-neutral-100 font-mono font-bold text-lg tracking-widest">{vehicleNo.toUpperCase()}</p>
                       <button
                         onClick={downloadQR}
-                        className="mt-2 flex items-center gap-2 text-accent hover:text-white text-xs font-bold uppercase transition-colors"
+                        className="mt-2 flex items-center gap-2 text-[color:var(--accent)] hover:text-white text-xs font-bold uppercase transition-colors"
                       >
                         <Download className="w-3 h-3" />
                         Save as Image
@@ -120,7 +120,7 @@ export default function QRGenerator({ isOpen, onClose }: { isOpen: boolean, onCl
                     </div>
                   </motion.div>
                 ) : (
-                  <div className="h-full min-h-[220px] flex flex-col items-center justify-center border-2 border-dashed border-neutral-800 rounded-3xl text-neutral-700">
+                  <div className="h-full min-h-[220px] flex flex-col items-center justify-center border-2 border-dashed border-border rounded-3xl text-neutral-700">
                     <RefreshCw className="w-10 h-10 mb-4 opacity-10" />
                     <p className="text-xs font-bold uppercase tracking-widest">Waiting for input</p>
                   </div>

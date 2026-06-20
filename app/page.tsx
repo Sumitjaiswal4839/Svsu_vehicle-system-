@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 
 const LandingPage = dynamic(() => import('@/components/LandingPage'), {
   ssr: false,
-  loading: () => <div className="min-h-screen bg-[#0a0a0c]" />
+  loading: () => <div className="min-h-screen bg-background" />
 });
 
 export default function Home() {

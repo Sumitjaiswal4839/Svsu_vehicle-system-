@@ -2,8 +2,8 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Shield, Users, User, LayoutDashboard, ArrowRight, Sun, Moon } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Shield, Users, User, LayoutDashboard, ArrowRight, Sparkles, Lock } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { useTheme } from './ThemeProvider';
 
 export default function LandingPage() {
@@ -12,15 +12,11 @@ export default function LandingPage() {
   const [dayWish, setDayWish] = useState('');
 
   useEffect(() => {
-    // Determine dynamic day wish
     const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
     const now = new Date();
-    const dayName = days[now.getDay()];
-    setDayWish(`Good ${dayName}`);
+    setDayWish(`Good ${days[now.getDay()]}`);
 
-    // Check Auth and User Info
     const checkAuth = async () => {
-      // First try student profile
       try {
         const sRes = await fetch('/api/profile');
         if (sRes.ok) {
@@ -30,133 +26,210 @@ export default function LandingPage() {
         }
       } catch (e) {}
 
-      // Then try guard dashboard
       try {
         const gRes = await fetch('/api/dashboard');
         if (gRes.ok) {
           const gData = await gRes.json();
-          setUserData({ 
-            name: gData.guardName || 'Officer', 
+          setUserData({
+            name: gData.guardName || 'Officer',
             role: 'guard',
-            building: gData.guardBuildingName || 'Global Command'
+            building: gData.guardBuildingName || 'Global Command',
           });
           return;
         }
       } catch (e) {}
-
-      // Try admin verify
-      try {
-        const aRes = await fetch('/api/admin/verify');
-        if (aRes.ok) {
-          setUserData({ name: 'Site Admin', role: 'admin' });
-        }
-      } catch (e) {}
     };
     checkAuth();
-
   }, []);
 
+  const cards = [
+    (!userData || userData.role === 'student') && {
+      href: '/profile',
+      icon: <User className="w-6 h-6" />,
+      title: 'Student Portal',
+      desc: 'Register your vehicle and get your permanent QR Gate Pass.',
+      cta: 'My Profile',
+      gradient: 'from-indigo-500/20 to-violet-500/10',
+      border: 'border-indigo-500/30 hover:border-indigo-400',
+      iconBg: 'bg-indigo-500/20 text-indigo-400',
+      ctaColor: 'text-indigo-400',
+      glow: 'hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)]',
+    },
+    (!userData || userData.role !== 'student') && {
+      href: '/visitor-entry',
+      icon: <Users className="w-6 h-6" />,
+      title: 'Guest Access',
+      desc: 'For guests, admission queries, and official campus visits.',
+      cta: 'Visitor Form',
+      gradient: 'from-sky-500/20 to-cyan-500/10',
+      border: 'border-sky-500/30 hover:border-sky-400',
+      iconBg: 'bg-sky-500/20 text-sky-400',
+      ctaColor: 'text-sky-400',
+      glow: 'hover:shadow-[0_20px_60px_rgba(14,165,233,0.25)]',
+    },
+    (!userData || userData.role !== 'student') && {
+      href: '/admin',
+      icon: <LayoutDashboard className="w-6 h-6" />,
+      title: 'Security Hub',
+      desc: 'Gate control and live monitoring for security personnel.',
+      cta: 'Open Dashboard',
+      gradient: 'from-violet-500/20 to-purple-500/10',
+      border: 'border-violet-500/30 hover:border-violet-400',
+      iconBg: 'bg-violet-500/20 text-violet-400',
+      ctaColor: 'text-violet-400',
+      glow: 'hover:shadow-[0_20px_60px_rgba(139,92,246,0.25)]',
+      span: true,
+    },
+  ].filter(Boolean) as any[];
+
   return (
-    <main className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4 md:p-8 relative pt-28 pb-12 transition-colors duration-500">
-      {/* Background Orbs */}
-      <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-accent/20 rounded-full blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[60%] h-[60%] bg-accent-blue/10 rounded-full blur-[120px] animate-pulse delay-700" />
+    <main className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 pt-28 pb-16 relative overflow-hidden transition-colors duration-500"
+      style={{ background: 'var(--background)', color: 'var(--foreground)' }}
+    >
+      {/* Gradient mesh background */}
+      <div className="absolute inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-[-20%] left-[-15%] w-[55%] h-[55%] rounded-full blur-[130px] opacity-60"
+          style={{ background: 'radial-gradient(circle, rgba(99,102,241,0.35) 0%, transparent 70%)' }} />
+        <div className="absolute bottom-[-15%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[130px] opacity-50"
+          style={{ background: 'radial-gradient(circle, rgba(14,165,233,0.3) 0%, transparent 70%)' }} />
+        <div className="absolute top-[40%] left-[40%] w-[30%] h-[30%] rounded-full blur-[100px] opacity-30"
+          style={{ background: 'radial-gradient(circle, rgba(139,92,246,0.4) 0%, transparent 70%)' }} />
+      </div>
+
+      {/* Watermark */}
+      <div className="watermark" />
 
       <div className="z-10 text-center max-w-5xl w-full">
-        <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+
+        {/* Badge */}
+        <motion.div
+          initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="inline-flex items-center gap-2 px-4 py-2 bg-foreground/5 border border-foreground/10 rounded-full mb-8 backdrop-blur-xl shadow-lg"
+          transition={{ duration: 0.5 }}
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full mb-8 backdrop-blur-xl border text-xs font-bold uppercase tracking-widest"
+          style={{
+            background: 'rgba(99,102,241,0.1)',
+            borderColor: 'rgba(99,102,241,0.3)',
+            color: 'rgba(165,180,252,1)',
+          }}
         >
-          <Shield className="w-4 h-4 text-accent" />
-          <span className="text-[10px] font-black uppercase tracking-widest text-foreground/70">
-            {dayWish} • {userData?.building ? `Active at ${userData.building}` : (userData ? userData.role : 'Campus Safety')}
-          </span>
+          <span className="w-2 h-2 rounded-full bg-green-400 animate-pulse" />
+          {dayWish} &bull; {userData?.building ? `Active at ${userData.building}` : userData ? userData.role : 'Campus Safety System'}
         </motion.div>
 
-        
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 bg-gradient-to-b from-foreground to-foreground/50 bg-clip-text text-transparent leading-tight drop-shadow-sm">
+        {/* Heading */}
+        <motion.h1
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-4xl sm:text-5xl md:text-7xl font-extrabold tracking-tight mb-6 leading-tight"
+        >
           {userData ? (
-            <>Welcome, <span className="text-accent">{userData.name.split(' ')[0]}</span> <br /> <span className="text-3xl md:text-5xl opacity-80 italic font-medium">I hope you're doing good!</span></>
+            <>
+              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-sky-400 bg-clip-text text-transparent">
+                Welcome, {userData.name.split(' ')[0]}
+              </span>
+              <br />
+              <span className="text-2xl md:text-4xl font-medium opacity-60 italic">
+                Stay safe, stay secure.
+              </span>
+            </>
           ) : (
-            <>SVSU Vehicle <br className="hidden sm:block" /> Control Center</>
+            <>
+              <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-sky-400 bg-clip-text text-transparent">
+                SVSU Campus
+              </span>
+              <br />
+              <span style={{ color: 'var(--foreground)', opacity: 0.85 }}>
+                Control Center
+              </span>
+            </>
           )}
-        </h1>
-        
-        <p className="text-foreground/60 text-sm md:text-lg mb-12 leading-relaxed max-w-xl mx-auto font-medium">
-          {userData 
+        </motion.h1>
+
+        {/* Subtitle */}
+        <motion.p
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-sm md:text-lg mb-14 leading-relaxed max-w-xl mx-auto font-medium"
+          style={{ color: 'var(--foreground)', opacity: 0.55 }}
+        >
+          {userData
             ? `Day by day, we are committed to your safety. Have a wonderful ${new Date().toLocaleDateString('en-US', { weekday: 'long' })}!`
             : 'Automated QR-based entry and exit management for campus vehicles and temporary visitors.'}
-        </p>
+        </motion.p>
 
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl mx-auto">
-          {/* Student Portal Card (Hidden for Guards) */}
-          {(!userData || userData.role === 'student') && (
-            <Link
-              href="/profile"
-              className="group flex flex-col items-start p-6 md:p-8 bg-card border border-foreground/10 rounded-[2.5rem] hover:border-accent hover:shadow-[0_20px_50px_rgba(148,137,194,0.3)] transition-all duration-500 backdrop-blur-xl"
+        {/* Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 w-full max-w-4xl mx-auto">
+          {cards.map((card, i) => (
+            <motion.div
+              key={card.href}
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.15 * (i + 1) }}
+              className={card.span ? 'sm:col-span-2 lg:col-span-1' : ''}
             >
-              <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center mb-5 text-accent group-hover:scale-110 transition-transform shadow-inner">
-                <User className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-black mb-2 text-foreground">Student Portal</h3>
-              <p className="text-foreground/50 text-sm mb-6 leading-relaxed text-left">Register your vehicle and get your permanent QR Gate Pass.</p>
-              <div className="mt-auto flex items-center gap-2 text-accent text-xs font-black uppercase tracking-widest group-hover:translate-x-2 transition-transform">
-                My Profile <ArrowRight className="w-4 h-4" />
-              </div>
-            </Link>
-          )}
+              <Link
+                href={card.href}
+                className={`group flex flex-col items-start p-7 md:p-8 rounded-[2rem] border backdrop-blur-xl transition-all duration-400 bg-gradient-to-br ${card.gradient} ${card.border} ${card.glow} h-full`}
+                style={{ background: `linear-gradient(135deg, var(--card) 0%, var(--card) 100%)` }}
+              >
+                {/* Icon */}
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 ${card.iconBg} group-hover:scale-110 transition-transform duration-300`}>
+                  {card.icon}
+                </div>
 
-          {/* Visitor Card (Hidden for Students) */}
-          {(!userData || userData.role !== 'student') && (
-            <Link
-              href="/visitor-entry"
-              className="group flex flex-col items-start p-6 md:p-8 bg-accent-blue/10 border border-accent-blue/20 rounded-[2.5rem] hover:border-accent-blue hover:shadow-[0_20px_50px_rgba(119,181,214,0.3)] transition-all duration-500 backdrop-blur-xl"
-            >
-              <div className="w-12 h-12 bg-accent-blue/20 rounded-2xl flex items-center justify-center mb-5 text-accent-blue group-hover:scale-110 transition-transform shadow-inner">
-                <Users className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-black mb-2 text-foreground">Guest Access</h3>
-              <p className="text-foreground/50 text-sm mb-6 leading-relaxed text-left">For guests, admission queries, and official campus visits.</p>
-              <div className="mt-auto flex items-center gap-2 text-accent-blue text-xs font-black uppercase tracking-widest group-hover:translate-x-2 transition-transform">
-                Visitor Form <ArrowRight className="w-4 h-4" />
-              </div>
-            </Link>
-          )}
+                {/* Text */}
+                <h3 className="text-xl md:text-2xl font-black mb-2" style={{ color: 'var(--foreground)' }}>
+                  {card.title}
+                </h3>
+                <p className="text-sm mb-6 leading-relaxed text-left" style={{ color: 'var(--foreground)', opacity: 0.5 }}>
+                  {card.desc}
+                </p>
 
-
-          {/* Security Hub Card (Hidden for Students) */}
-          {(!userData || userData.role !== 'student') && (
-            <Link
-              href="/admin"
-              className="group flex flex-col items-start p-6 md:p-8 bg-accent/10 border border-accent/20 rounded-[2.5rem] hover:border-accent hover:shadow-[0_20px_50px_rgba(148,137,194,0.3)] transition-all duration-500 backdrop-blur-xl sm:col-span-2 lg:col-span-1"
-            >
-              <div className="w-12 h-12 bg-accent/20 rounded-2xl flex items-center justify-center mb-5 text-accent group-hover:scale-110 transition-transform shadow-inner">
-                <LayoutDashboard className="w-6 h-6" />
-              </div>
-              <h3 className="text-xl md:text-2xl font-black mb-2 text-foreground">Security Hub</h3>
-              <p className="text-foreground/50 text-sm mb-6 leading-relaxed text-left">Gate control and live monitoring for security personnel.</p>
-              <div className="mt-auto flex items-center gap-2 text-accent text-xs font-black uppercase tracking-widest group-hover:translate-x-2 transition-transform">
-                Open Dashboard <ArrowRight className="w-4 h-4" />
-              </div>
-            </Link>
-          )}
+                {/* CTA */}
+                <div className={`mt-auto flex items-center gap-2 text-xs font-black uppercase tracking-widest ${card.ctaColor} group-hover:translate-x-2 transition-transform duration-300`}>
+                  {card.cta} <ArrowRight className="w-4 h-4" />
+                </div>
+              </Link>
+            </motion.div>
+          ))}
         </div>
+
+        {/* Stats bar */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.7 }}
+          className="mt-14 flex flex-wrap items-center justify-center gap-8"
+        >
+          {[
+            { label: 'QR-Based Entry', icon: <Shield className="w-4 h-4" /> },
+            { label: 'Real-time Monitoring', icon: <Sparkles className="w-4 h-4" /> },
+            { label: 'Secure & Encrypted', icon: <Lock className="w-4 h-4" /> },
+          ].map((item) => (
+            <div key={item.label} className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest"
+              style={{ color: 'var(--foreground)', opacity: 0.4 }}>
+              {item.icon}
+              {item.label}
+            </div>
+          ))}
+        </motion.div>
       </div>
 
       {/* Footer */}
-      <div className="mt-20 text-foreground/40 text-[10px] font-black uppercase tracking-[0.3em] z-10 flex flex-col items-center gap-4">
-        <div className="flex items-center gap-6 opacity-60">
-           <span className="hover:text-accent cursor-pointer transition-colors">Safety</span>
-           <span className="w-1 h-1 bg-foreground/20 rounded-full" />
-           <span className="hover:text-accent cursor-pointer transition-colors">Security</span>
-           <span className="w-1 h-1 bg-foreground/20 rounded-full" />
-           <span className="hover:text-accent cursor-pointer transition-colors">Efficiency</span>
+      <div className="mt-16 text-[10px] font-black uppercase tracking-[0.3em] z-10 flex flex-col items-center gap-3"
+        style={{ color: 'var(--foreground)', opacity: 0.3 }}>
+        <div className="flex items-center gap-5">
+          <span>Safety</span>
+          <span className="w-1 h-1 rounded-full" style={{ background: 'var(--foreground)', opacity: 0.3 }} />
+          <span>Security</span>
+          <span className="w-1 h-1 rounded-full" style={{ background: 'var(--foreground)', opacity: 0.3 }} />
+          <span>Efficiency</span>
         </div>
         &copy; 2026 SVSU Security &bull; Engineered for Safety
       </div>
     </main>
   );
 }
-

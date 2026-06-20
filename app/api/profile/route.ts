@@ -4,27 +4,32 @@ import { uploadPhoto } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
+import { logger } from '@/lib/logger';
+import { sanitizeString } from '@/lib/sanitize';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
     const { 
-      name, 
-      course, 
+      name: rawName, 
+      course: rawCourse, 
       semester, 
       rollNo, 
       password,
       vehicleNo, 
       license, 
-      faculty,
+      faculty: rawFaculty,
       rcPhoto,
       idCardFront,
       idCardBack,
       profilePhoto,
       buildingId
     } = body;
+
+    const name = rawName ? sanitizeString(rawName) : rawName;
+    const course = rawCourse ? sanitizeString(rawCourse) : rawCourse;
+    const faculty = rawFaculty ? sanitizeString(rawFaculty) : rawFaculty;
 
 
     // Validation
@@ -52,10 +57,11 @@ export async function POST(request: Request) {
       if (profilePhoto?.startsWith('data:image')) {
         profilePhotoUrl = await uploadPhoto(profilePhoto, `profile-${rollNo}-${Date.now()}`);
       }
-    } catch (uploadError: any) {
-      console.error('Supabase Upload Error:', uploadError);
+    } catch (uploadError: unknown) {
+      logger.error('Supabase upload failed', { error: String(uploadError) });
+      const msg = uploadError instanceof Error ? uploadError.message : 'Check if "vehicle-photos" bucket exists in Supabase';
       return NextResponse.json({ 
-        error: `Photo Upload Failed: ${uploadError.message || 'Check if "vehicle-photos" bucket exists in Supabase'}` 
+        error: `Photo Upload Failed: ${msg}` 
       }, { status: 500 });
     }
 
@@ -117,8 +123,8 @@ export async function POST(request: Request) {
     });
 
     return NextResponse.json({ message: 'Success', profile }, { status: 201 });
-  } catch (error: any) {
-    console.error('CRITICAL Profile API Error:', error);
+  } catch (error: unknown) {
+    logger.error('Profile API critical error', { error: String(error) });
     return NextResponse.json({ 
       error: 'Database error. Ensure your connection is stable and try again.' 
     }, { status: 500 });
@@ -143,7 +149,7 @@ export async function GET() {
       include: {
         entries: {
           orderBy: { entryTime: 'desc' },
-          take: 5,
+          take: 10,
         }
       }
     });
@@ -154,7 +160,46 @@ export async function GET() {
 
     return NextResponse.json(profile);
   } catch (error) {
-    console.error('Profile Fetch Error:', error);
+    logger.error('Profile fetch failed', { error: String(error) });
     return NextResponse.json({ error: 'Session expired. Please login again.' }, { status: 401 });
+  }
+}
+
+export async function DELETE() {
+  try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('student_token')?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { payload } = await jwtVerify(token, JWT_SECRET);
+    const studentId = payload.id as string;
+
+    // Delete all entry records for this student
+    await prisma.entryRecord.deleteMany({
+      where: { profileId: studentId },
+    });
+
+    // Delete the student profile
+    await prisma.userVehicleProfile.delete({
+      where: { id: studentId },
+    });
+
+    // Clear the student_token cookie
+    const response = NextResponse.json({ message: 'Account deleted successfully' });
+    response.cookies.set('student_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 0,
+      path: '/',
+    });
+
+    return response;
+  } catch (error) {
+    logger.error('Account deletion failed', { error: String(error) });
+    return NextResponse.json({ error: 'Failed to delete account' }, { status: 500 });
   }
 }

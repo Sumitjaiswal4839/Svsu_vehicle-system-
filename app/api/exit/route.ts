@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import { logToCSV } from '@/lib/csv';
 import { logAudit } from '@/lib/audit';
 import { verifyActiveSession } from '@/lib/auth';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
@@ -93,7 +94,7 @@ export async function POST(request: Request) {
       exitTime: updatedRecord.exitTime,
     });
   } catch (error) {
-    console.error('Exit API Error:', error);
+    logger.error('Exit API failed', { error: String(error) });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

@@ -60,7 +60,7 @@ export default function VisitorForm({ isOpen, onClose, onSuccess }: { isOpen: bo
             initial={{ scale: 0.9, y: 20 }}
             animate={{ scale: 1, y: 0 }}
             exit={{ scale: 0.9, y: 20 }}
-            className="w-full max-w-lg bg-neutral-900 border border-neutral-800 rounded-[2.5rem] shadow-2xl overflow-hidden"
+            className="w-full max-w-lg bg-card border border-border rounded-[2.5rem] shadow-2xl overflow-hidden"
           >
             <div className="p-8">
               <div className="flex justify-between items-center mb-8">
@@ -82,7 +82,7 @@ export default function VisitorForm({ isOpen, onClose, onSuccess }: { isOpen: bo
                       <input 
                         value={formData.name}
                         onChange={e => setFormData({...formData, name: e.target.value})}
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-accent/40 outline-none"
+                        className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-accent/40 outline-none"
                         placeholder="Guest Name"
                       />
                     </div>
@@ -98,7 +98,7 @@ export default function VisitorForm({ isOpen, onClose, onSuccess }: { isOpen: bo
                           const val = e.target.value;
                           setFormData({...formData, purpose: val, isHackathon: val.toLowerCase().includes('hackathon')});
                         }}
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-accent/40 outline-none min-h-[100px]"
+                        className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-accent/40 outline-none min-h-[100px]"
                         placeholder="Reason for entry..."
                       />
                     </div>
@@ -116,7 +116,7 @@ export default function VisitorForm({ isOpen, onClose, onSuccess }: { isOpen: bo
                       <select 
                         value={formData.buildingId}
                         onChange={e => setFormData({...formData, buildingId: e.target.value})}
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-accent/40 outline-none appearance-none font-bold"
+                        className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-4 focus:ring-2 focus:ring-accent/40 outline-none appearance-none font-bold"
                       >
                         <option value="">Select Building</option>
                         {BUILDING_MAP.map(b => (
@@ -137,7 +137,7 @@ export default function VisitorForm({ isOpen, onClose, onSuccess }: { isOpen: bo
 
               {step === 2 && (
                 <div className="space-y-6 text-center">
-                  <div className="relative w-48 h-48 mx-auto rounded-[2rem] border-4 border-neutral-800 overflow-hidden bg-neutral-950">
+                  <div className="relative w-48 h-48 mx-auto rounded-[2rem] border-4 border-border overflow-hidden bg-background">
                     {formData.photo ? (
                       <img src={formData.photo} alt="Visitor" className="w-full h-full object-cover" />
                     ) : (

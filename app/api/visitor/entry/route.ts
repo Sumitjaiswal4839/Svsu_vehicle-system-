@@ -3,13 +3,17 @@ import { prisma } from '@/lib/prisma';
 import { uploadPhoto } from '@/lib/supabase';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
+import { sanitizeString } from '@/lib/sanitize';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { name, purpose, contact, photo, buildingId, isHackathon } = body;
+    const { name: rawName, purpose: rawPurpose, contact: rawContact, photo, buildingId, vehicleNo, isHackathon } = body;
+
+    const name = rawName ? sanitizeString(rawName) : rawName;
+    const purpose = rawPurpose ? sanitizeString(rawPurpose) : rawPurpose;
+    const contact = rawContact ? sanitizeString(rawContact) : rawContact;
 
     if (!name || !purpose || !buildingId) {
       return NextResponse.json({ error: 'Missing mandatory fields' }, { status: 400 });
@@ -32,7 +36,6 @@ export async function POST(request: Request) {
       }
     });
 
-
     // Also create an EntryRecord for the live dashboard feed
     await (prisma as any).entryRecord.create({
       data: {
@@ -41,6 +44,7 @@ export async function POST(request: Request) {
         visitorPurpose: purpose,
         visitorContact: contact,
         visitorPhoto: photoUrl,
+        vehicleNo: vehicleNo || null,
         buildingId,
         isTemporary: true,
         entryTime: new Date()

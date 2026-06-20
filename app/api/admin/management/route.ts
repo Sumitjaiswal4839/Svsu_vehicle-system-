@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
 
 // Security Check: Ensure only ADMIN can access management APIs
 async function verifyAdmin() {

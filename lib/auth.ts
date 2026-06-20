@@ -1,8 +1,7 @@
 import { prisma } from './prisma';
 import { cookies } from 'next/headers';
 import { jwtVerify } from 'jose';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from './jwt';
 
 export async function verifyActiveSession() {
   const cookieStore = await cookies();

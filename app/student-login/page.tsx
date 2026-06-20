@@ -41,17 +41,17 @@ export default function StudentLoginPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative">
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[150px] pointer-events-none" />
       
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl my-auto"
+        className="w-full max-w-md bg-card/80 border border-border p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl my-auto"
       >
         <div className="flex flex-col items-center mb-8">
           <div className="p-4 bg-accent/20 rounded-2xl border border-accent/30 mb-4">
-            <Shield className="w-10 h-10 text-accent" />
+            <Shield className="w-10 h-10 text-[color:var(--accent)]" />
           </div>
           <h1 className="text-3xl font-black mb-2">Student Login</h1>
           <p className="text-neutral-500 text-sm font-medium">Verify your identity to access Gate Pass</p>
@@ -67,7 +67,7 @@ export default function StudentLoginPage() {
                 value={formData.rollNo}
                 onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
                 placeholder="2100..."
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
               />
             </div>
           </div>
@@ -75,7 +75,7 @@ export default function StudentLoginPage() {
           <div className="space-y-2">
             <div className="flex items-center justify-between ml-1">
               <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest">Secure Password</label>
-              <Link href="/forgot-password" className="text-[10px] font-bold text-accent hover:text-accent/80 uppercase tracking-widest transition-colors">
+              <Link href="/forgot-password" className="text-[10px] font-bold text-[color:var(--accent)] hover:text-[color:var(--accent)]/80 uppercase tracking-widest transition-colors">
                 Forgot Password?
               </Link>
             </div>
@@ -87,7 +87,7 @@ export default function StudentLoginPage() {
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 placeholder="••••••••"
-                className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                className="w-full bg-background border border-border rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
               />
               <button
                 type="button"
@@ -113,7 +113,7 @@ export default function StudentLoginPage() {
         <div className="mt-8 text-center">
           <p className="text-neutral-500 text-xs">
             Don't have a profile yet?{' '}
-            <button onClick={() => router.push('/profile?new=true')} className="text-accent font-bold hover:underline">Register Now</button>
+            <button onClick={() => router.push('/profile?new=true')} className="text-[color:var(--accent)] font-bold hover:underline">Register Now</button>
           </p>
         </div>
       </motion.div>

@@ -4,11 +4,25 @@ import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { cookies, headers } from 'next/headers';
 import { logAudit } from '@/lib/audit';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { checkRateLimit, resetRateLimit } from '@/lib/rate-limit';
+import { JWT_SECRET } from '@/lib/jwt';
+import { logger } from '@/lib/logger';
 
 export async function POST(request: Request) {
   try {
+    const headersList = await headers();
+    const ip = headersList.get('x-forwarded-for')?.split(',')[0].trim() || '127.0.0.1';
+
+    // Rate limiting — 5 attempts per 15 minutes per IP
+    const rateLimit = checkRateLimit(`guard:${ip}`);
+    if (!rateLimit.allowed) {
+      const minutes = Math.ceil(rateLimit.resetIn / 60000);
+      return NextResponse.json(
+        { error: `Too many login attempts. Try again in ${minutes} minute${minutes > 1 ? 's' : ''}.` },
+        { status: 429 }
+      );
+    }
+
     const { username, password } = await request.json();
 
     if (!username || !password) {
@@ -52,15 +66,16 @@ export async function POST(request: Request) {
       .sign(JWT_SECRET);
 
     const cookieStore = await cookies();
-    const headersList = await headers();
     const userAgent = headersList.get('user-agent') || 'Unknown';
-    const ip = headersList.get('x-forwarded-for') || '127.0.0.1';
+    
+    // Reset rate limit on successful login
+    resetRateLimit(`guard:${ip}`);
     
     // Set Cookies
     cookieStore.set('auth_token', accessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 15 * 60,
       path: '/',
     });
@@ -68,7 +83,7 @@ export async function POST(request: Request) {
     cookieStore.set('refresh_token', refreshToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 7 * 24 * 60 * 60,
       path: '/',
     });
@@ -77,7 +92,7 @@ export async function POST(request: Request) {
       cookieStore.set('admin_token', accessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'strict',
         maxAge: 15 * 60,
         path: '/',
       });
@@ -104,7 +119,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ message: 'Login successful', role: user.role });
   } catch (error) {
-    console.error('Login Error:', error);
+    logger.error('Login failed', { error: String(error) });
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

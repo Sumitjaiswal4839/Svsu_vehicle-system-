@@ -2,8 +2,8 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
+import { logger } from '@/lib/logger';
 
 export async function GET() {
   try {
@@ -63,10 +63,11 @@ export async function GET() {
       auditStats,
       buildingStats,
       topGuards: guardActivity
-
+    }, {
+      headers: { 'Cache-Control': 'private, max-age=30' }
     });
   } catch (error) {
-    console.error('Stats Error:', error);
+    logger.error('Stats API failed', { error: String(error) });
     return NextResponse.json({ error: 'Internal Error' }, { status: 500 });
   }
 }

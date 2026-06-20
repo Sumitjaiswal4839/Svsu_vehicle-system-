@@ -117,10 +117,10 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
         <button
           type="button"
           onClick={startCamera}
-          className="w-full py-4 bg-neutral-900 border border-neutral-800 rounded-2xl text-sm font-bold hover:bg-neutral-800 transition-all flex items-center justify-center gap-3 text-neutral-400 group"
+          className="w-full py-4 bg-card border border-border rounded-2xl text-sm font-bold hover:bg-neutral-800 transition-all flex items-center justify-center gap-3 text-neutral-400 group"
         >
           <div className="p-2 bg-accent/10 rounded-lg group-hover:bg-accent/20 transition-colors">
-            <Camera className="w-5 h-5 text-accent" />
+            <Camera className="w-5 h-5 text-[color:var(--accent)]" />
           </div>
           Open Smart Camera
         </button>
@@ -146,12 +146,12 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
               <button 
                 type="button"
                 onClick={stopCamera}
-                className="p-3 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-md border border-neutral-800"
+                className="p-3 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-md border border-border"
               >
                 <X className="w-6 h-6" />
               </button>
-              <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-neutral-800">
-                <ShieldCheck className="w-5 h-5 text-accent animate-pulse" />
+              <div className="flex items-center gap-2 bg-black/40 px-4 py-2 rounded-full backdrop-blur-md border border-border">
+                <ShieldCheck className="w-5 h-5 text-[color:var(--accent)] animate-pulse" />
                 <span className="text-xs text-white font-bold tracking-widest uppercase">SVSU AI Scan</span>
               </div>
               <div className="w-12 h-12" /> {/* Spacer */}
@@ -166,11 +166,11 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
                 <div className="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-accent rounded-bl-xl m-[-4px]" />
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-accent rounded-br-xl m-[-4px]" />
                 
-                <span className="text-[10px] text-accent font-black uppercase tracking-widest bg-black/80 px-3 py-1 rounded-full border border-accent/30 shadow-[0_0_10px_rgba(37,99,235,0.4)] mt-2">
+                <span className="text-[10px] text-[color:var(--accent)] font-black uppercase tracking-widest bg-black/80 px-3 py-1 rounded-full border border-accent/30 shadow-[0_0_10px_rgba(37,99,235,0.4)] mt-2">
                   Place Face / ID Card here
                 </span>
 
-                <span className="text-[10px] text-neutral-300 font-bold text-center px-3 mb-2 leading-relaxed bg-black/70 p-2 rounded-xl backdrop-blur-sm border border-neutral-800/80">
+                <span className="text-[10px] text-neutral-300 font-bold text-center px-3 mb-2 leading-relaxed bg-black/70 p-2 rounded-xl backdrop-blur-sm border border-border/80">
                   AI will auto-reject helmet, scarf or non-SVSU formats.
                 </span>
               </div>
@@ -193,7 +193,7 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
                   className="absolute inset-0 flex flex-col items-center justify-center bg-black/80 backdrop-blur-sm z-30"
                 >
                   <div className="p-4 bg-accent/20 rounded-full mb-4 border border-accent/40 shadow-[0_0_30px_rgba(37,99,235,0.4)]">
-                    <RefreshCw className="w-10 h-10 text-accent animate-spin" />
+                    <RefreshCw className="w-10 h-10 text-[color:var(--accent)] animate-spin" />
                   </div>
                   <p className="text-white font-black tracking-tighter text-xl text-center px-4">{analysisStatus}</p>
                   <p className="text-neutral-400 text-xs mt-2 uppercase font-bold tracking-widest animate-pulse">Running checks in SVSU AI System...</p>
@@ -231,7 +231,7 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
               <button
                 type="button"
                 onClick={stopCamera}
-                className="p-4 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-neutral-300 border border-neutral-800/60 hover:text-white transition-all transform active:scale-95"
+                className="p-4 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-neutral-300 border border-border/60 hover:text-white transition-all transform active:scale-95"
               >
                 <X className="w-5 h-5" />
               </button>

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Users, 
@@ -201,8 +202,8 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-accent animate-spin mb-4" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[color:var(--accent)] animate-spin mb-4" />
         <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs">Accessing Admin Core...</p>
       </div>
     );
@@ -231,7 +232,7 @@ export default function AdminDashboard() {
             onClick={handleExportLogs}
             disabled={exporting}
             aria-label="Download Security Audit Logs"
-            className="flex items-center gap-2 px-4 py-2 bg-neutral-900 border border-neutral-800 rounded-xl hover:bg-neutral-800 transition-all text-[10px] font-black uppercase tracking-widest"
+            className="flex items-center gap-2 px-4 py-2 bg-card border border-border rounded-xl hover:bg-neutral-800 transition-all text-[10px] font-black uppercase tracking-widest"
           >
             {exporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
             Export Logs
@@ -248,7 +249,7 @@ export default function AdminDashboard() {
 
         {/* Tab Navigation */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 mb-8">
-          <div className="flex bg-neutral-900/50 p-1 rounded-2xl border border-white/5">
+          <div className="flex bg-card/60 p-1 rounded-2xl border border-white/5">
             {[
               { id: 'overview', label: 'Overview', icon: ShieldCheck },
               { id: 'students', label: 'Students', icon: Users },
@@ -270,13 +271,13 @@ export default function AdminDashboard() {
           </div>
 
           <div className="relative w-full md:w-80 group">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-accent transition-colors" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-500 group-focus-within:text-[color:var(--accent)] transition-colors" />
             <input 
               type="text"
               placeholder={`Search ${activeTab}...`}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-neutral-900 border border-neutral-800 rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all"
+              className="w-full bg-card border border-border rounded-2xl py-3 pl-12 pr-4 text-sm focus:outline-none focus:border-accent/50 focus:ring-4 focus:ring-accent/5 transition-all"
             />
           </div>
         </div>
@@ -300,7 +301,7 @@ export default function AdminDashboard() {
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Guard List */}
-              <div className="lg:col-span-2 bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl">
+              <div className="lg:col-span-2 bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl">
                 <div className="flex items-center justify-between mb-8">
                   <div>
                     <h2 className="text-xl font-bold">Security Personnel</h2>
@@ -330,7 +331,7 @@ export default function AdminDashboard() {
                         initial={{ opacity: 0, scale: 0.95, y: 20 }}
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: 20 }}
-                        className="relative w-full max-w-md bg-neutral-900 border border-neutral-800 rounded-[2.5rem] p-8 shadow-2xl overflow-hidden"
+                        className="relative w-full max-w-md bg-card border border-border rounded-[2.5rem] p-8 shadow-2xl overflow-hidden"
                       >
                          <div className="absolute top-0 right-0 p-8 opacity-5">
                             <UserPlus className="w-24 h-24" />
@@ -347,7 +348,7 @@ export default function AdminDashboard() {
                                  value={newGuard.username}
                                  onChange={(e) => setNewGuard({...newGuard, username: e.target.value})}
                                  placeholder="e.g. guard_officer_01"
-                                 className="w-full bg-black border border-neutral-800 rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all"
+                                 className="w-full bg-black border border-border rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all"
                                />
                             </div>
                             <div className="space-y-2">
@@ -358,7 +359,7 @@ export default function AdminDashboard() {
                                  value={newGuard.password}
                                  onChange={(e) => setNewGuard({...newGuard, password: e.target.value})}
                                  placeholder="••••••••"
-                                 className="w-full bg-black border border-neutral-800 rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all"
+                                 className="w-full bg-black border border-border rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all"
                                />
                             </div>
                             <div className="space-y-2">
@@ -366,7 +367,7 @@ export default function AdminDashboard() {
                                <select 
                                  value={newGuard.buildingId}
                                  onChange={(e) => setNewGuard({...newGuard, buildingId: e.target.value})}
-                                 className="w-full bg-black border border-neutral-800 rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all appearance-none"
+                                 className="w-full bg-black border border-border rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none transition-all appearance-none"
                                >
                                   <option value="">No Initial Assignment</option>
                                   {buildings.map(b => (
@@ -400,7 +401,7 @@ export default function AdminDashboard() {
 
                 <div className="space-y-4">
                   {guards.map((guard) => (
-                    <div key={guard.id} className="flex items-center justify-between p-5 bg-neutral-950/50 border border-neutral-800 rounded-3xl">
+                    <div key={guard.id} className="flex items-center justify-between p-5 bg-foreground/[0.03] border border-border rounded-3xl">
                       <div className="flex items-center gap-4">
                         <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${guard.isAuthorized ? 'bg-green-500/10 text-green-500' : 'bg-red-500/10 text-red-500'}`}>
                           {guard.isAuthorized ? <ShieldCheck className="w-5 h-5" /> : <ShieldX className="w-5 h-5" />}
@@ -415,7 +416,7 @@ export default function AdminDashboard() {
                             <select 
                               value={guard.buildingId || ''}
                               onChange={(e) => toggleAuthorization(guard.id, guard.isAuthorized, e.target.value)}
-                              className="bg-transparent text-[10px] font-bold text-accent outline-none border-b border-accent/20 hover:border-accent transition-colors"
+                              className="bg-transparent text-[10px] font-bold text-[color:var(--accent)] outline-none border-b border-accent/20 hover:border-accent transition-colors"
                             >
                               <option value="">No Building Assigned</option>
                               {buildings.map(b => (
@@ -432,7 +433,7 @@ export default function AdminDashboard() {
                         onClick={() => toggleAuthorization(guard.id, guard.isAuthorized)}
                         className={`px-5 py-2.5 rounded-xl font-black text-[10px] uppercase tracking-widest transition-all ${
                           guard.isAuthorized 
-                            ? 'bg-neutral-900 text-red-500 border border-red-500/10 hover:bg-red-500 hover:text-white' 
+                            ? 'bg-card text-red-500 border border-red-500/10 hover:bg-red-500 hover:text-white' 
                             : 'bg-accent text-white shadow-lg shadow-accent/20'
                         }`}
                       >
@@ -445,28 +446,28 @@ export default function AdminDashboard() {
 
               {/* Insights */}
               <div className="space-y-8">
-                <div className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl">
+                <div className="bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl">
                    <h2 className="text-xl font-bold mb-6">Activity Breakdown</h2>
                    <div className="space-y-4">
                       {stats?.auditStats?.map((as: any) => (
-                        <div key={as.action} className="flex items-center justify-between p-3 bg-neutral-950/50 border border-neutral-800 rounded-xl">
+                        <div key={as.action} className="flex items-center justify-between p-3 bg-foreground/[0.03] border border-border rounded-xl">
                            <span className="text-[10px] font-black uppercase text-neutral-500">{as.action}</span>
-                           <span className="text-sm font-bold text-accent">{as._count._all}</span>
+                           <span className="text-sm font-bold text-[color:var(--accent)]">{as._count._all}</span>
                         </div>
                       ))}
                    </div>
                 </div>
 
-                <div className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl">
+                <div className="bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl">
                    <h2 className="text-xl font-bold mb-6">Building Occupancy</h2>
                    <div className="space-y-4">
                       {stats?.buildingStats?.map((bs: any) => (
                         <div key={bs.buildingId} className="space-y-2">
                            <div className="flex items-center justify-between">
                               <span className="text-xs font-bold text-neutral-300">{bs.buildingId || 'Unassigned'}</span>
-                              <span className="text-xs font-black text-accent">{bs._count._all}</span>
+                              <span className="text-xs font-black text-[color:var(--accent)]">{bs._count._all}</span>
                            </div>
-                           <div className="h-1.5 bg-neutral-950 rounded-full overflow-hidden border border-white/5">
+                           <div className="h-1.5 bg-background rounded-full overflow-hidden border border-white/5">
                               <motion.div 
                                 initial={{ width: 0 }}
                                 animate={{ width: `${Math.min(100, (bs._count._all / (stats.totalEntries || 1)) * 100)}%` }}
@@ -484,13 +485,13 @@ export default function AdminDashboard() {
         )}
 
         {activeTab === 'students' && (
-          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-8 backdrop-blur-xl">
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl">
             <div className="flex items-center justify-between mb-8">
               <div>
                 <h2 className="text-xl font-bold">Registered Students</h2>
                 <p className="text-xs text-neutral-500">Directory of all authorized campus vehicles</p>
               </div>
-              <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-accent rounded-xl text-xs font-bold">
+              <div className="flex items-center gap-2 px-4 py-2 bg-accent/10 text-[color:var(--accent)] rounded-xl text-xs font-bold">
                 <Users className="w-4 h-4" />
                 {students.length} Total
               </div>
@@ -499,7 +500,7 @@ export default function AdminDashboard() {
             <div className="overflow-x-auto">
               <table className="w-full text-left">
                 <thead>
-                  <tr className="border-b border-neutral-800">
+                  <tr className="border-b border-border">
                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-neutral-500">Student Info</th>
                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-neutral-500">Course & Year</th>
                     <th className="pb-4 text-[10px] font-black uppercase tracking-widest text-neutral-500">Vehicle No</th>
@@ -511,8 +512,8 @@ export default function AdminDashboard() {
                     <tr key={s.id} className="group hover:bg-white/5 transition-colors">
                       <td className="py-4">
                         <div className="flex items-center gap-3">
-                          <div className="w-10 h-10 bg-neutral-800 rounded-xl overflow-hidden border border-white/5">
-                            <img src={s.profilePhoto || '/placeholder-user.png'} className="w-full h-full object-cover" />
+                          <div className="w-10 h-10 bg-neutral-800 rounded-xl overflow-hidden border border-white/5 relative">
+                            <Image src={s.profilePhoto || '/placeholder-user.png'} alt={s.name} fill className="object-cover" />
                           </div>
                           <div>
                             <p className="font-bold text-sm">{s.name}</p>
@@ -524,7 +525,7 @@ export default function AdminDashboard() {
                         <p className="text-sm">{s.course}</p>
                         <p className="text-[10px] text-neutral-500 uppercase">{s.semester} Sem</p>
                       </td>
-                      <td className="py-4 font-mono text-sm text-accent">{s.vehicleNo}</td>
+                      <td className="py-4 font-mono text-sm text-[color:var(--accent)]">{s.vehicleNo}</td>
                       <td className="py-4 text-xs text-neutral-500">
                         {new Date(s.createdAt).toLocaleDateString()}
                       </td>
@@ -548,11 +549,11 @@ export default function AdminDashboard() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sessions.map((session) => (
-                <div key={session.id} className="bg-neutral-900/40 border border-neutral-800 rounded-[2.5rem] p-6 backdrop-blur-xl relative overflow-hidden group">
+                <div key={session.id} className="bg-card/80 border border-border rounded-[2.5rem] p-6 backdrop-blur-xl relative overflow-hidden group">
                   <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
                       <div className="p-3 bg-accent/10 rounded-2xl">
-                        {session.userAgent?.includes('Mobi') ? <Smartphone className="w-5 h-5 text-accent" /> : <Monitor className="w-5 h-5 text-accent" />}
+                        {session.userAgent?.includes('Mobi') ? <Smartphone className="w-5 h-5 text-[color:var(--accent)]" /> : <Monitor className="w-5 h-5 text-[color:var(--accent)]" />}
                       </div>
                       <div>
                         <h3 className="font-bold">{session.user.username}</h3>
@@ -595,8 +596,8 @@ export default function AdminDashboard() {
 
 function AdminStatCard({ label, value, icon, alert }: any) {
   return (
-    <div className={`bg-neutral-900/40 border ${alert ? 'border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.1)]' : 'border-neutral-800'} rounded-[2rem] p-6 backdrop-blur-xl`}>
-      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${alert ? 'bg-orange-500/10 text-orange-500' : 'bg-accent/10 text-accent'}`}>
+    <div className={`bg-card/80 border ${alert ? 'border-orange-500/30 shadow-[0_0_20px_rgba(249,115,22,0.1)]' : 'border-border'} rounded-[2rem] p-6 backdrop-blur-xl`}>
+      <div className={`w-10 h-10 rounded-xl flex items-center justify-center mb-4 ${alert ? 'bg-orange-500/10 text-orange-500' : 'bg-accent/10 text-[color:var(--accent)]'}`}>
         {icon}
       </div>
       <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest mb-1">{label}</p>

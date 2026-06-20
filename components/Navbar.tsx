@@ -140,7 +140,7 @@ export default function Navbar() {
             >
               <Link 
                 href="/admin/dashboard" 
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all border border-accent/30 ${pathname === '/admin/dashboard' ? 'bg-accent text-white' : 'bg-accent/10 text-accent hover:bg-accent/20'}`}
+                className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all border border-accent/30 ${pathname === '/admin/dashboard' ? 'bg-accent text-white' : 'bg-accent/10 text-[color:var(--accent)] hover:bg-accent/20'}`}
               >
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Admin Core</span>
@@ -154,7 +154,7 @@ export default function Navbar() {
         {/* Theme Toggle */}
         <button 
           onClick={toggleTheme}
-          className="p-2.5 text-foreground/40 hover:text-accent hover:bg-foreground/5 rounded-xl transition-all"
+          className="p-2.5 text-foreground/40 hover:text-[color:var(--accent)] hover:bg-foreground/5 rounded-xl transition-all"
         >
           {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
         </button>

@@ -60,11 +60,11 @@ function ExitFormInner() {
 
   if (success && exitedData) {
     return (
-      <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 flex items-center justify-center p-6">
+      <main className="min-h-screen bg-background text-foreground flex items-center justify-center p-6">
         <motion.div 
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
-          className="w-full max-w-md bg-neutral-900/40 border border-neutral-800 p-10 rounded-[3rem] text-center backdrop-blur-2xl"
+          className="w-full max-w-md bg-card/80 border border-border p-10 rounded-[3rem] text-center backdrop-blur-2xl"
         >
           <div className="w-20 h-20 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-red-500/30">
             <LogOut className="w-10 h-10 text-red-500" />
@@ -72,9 +72,9 @@ function ExitFormInner() {
           <h1 className="text-3xl font-black mb-2">Exit Confirmed</h1>
           <p className="text-neutral-500 mb-8 font-medium">Safe travels from SVSU Campus</p>
           
-          <div className="bg-neutral-950/50 border border-neutral-800 rounded-3xl p-6 mb-8 text-left">
+          <div className="bg-foreground/[0.03] border border-border rounded-3xl p-6 mb-8 text-left">
              <p className="text-neutral-300 text-sm leading-relaxed">
-              <span className="font-black text-white text-lg">{exitedData.name}</span> with vehicle <span className="font-black text-accent text-lg font-mono">{exitedData.vehicleNo}</span> has been logged out of the active system.
+              <span className="font-black text-white text-lg">{exitedData.name}</span> with vehicle <span className="font-black text-[color:var(--accent)] text-lg font-mono">{exitedData.vehicleNo}</span> has been logged out of the active system.
             </p>
           </div>
 
@@ -88,7 +88,7 @@ function ExitFormInner() {
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 p-4 md:p-8 flex items-center justify-center relative overflow-hidden">
+    <main className="min-h-screen bg-background text-neutral-100 p-4 md:p-8 flex items-center justify-center relative overflow-hidden">
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-red-600/10 rounded-full blur-[120px]" />
       
       <div className="z-10 w-full max-w-xl">
@@ -98,14 +98,14 @@ function ExitFormInner() {
         </Link>
 
         {loading ? (
-          <div className="bg-neutral-900/40 border border-neutral-800 p-12 rounded-[2.5rem] text-center flex flex-col items-center backdrop-blur-2xl">
+          <div className="bg-card/80 border border-border p-12 rounded-[2.5rem] text-center flex flex-col items-center backdrop-blur-2xl">
             <Scan className="w-12 h-12 text-red-500 animate-pulse mb-6" />
             <h2 className="text-2xl font-black mb-2">Processing Exit QR</h2>
             <p className="text-neutral-500 text-sm">Validating active entry session...</p>
             <Loader2 className="w-6 h-6 animate-spin mt-8 text-neutral-700" />
           </div>
         ) : (
-          <div className="bg-neutral-900/40 border border-neutral-800 p-8 md:p-10 rounded-[2.5rem] backdrop-blur-2xl shadow-2xl">
+          <div className="bg-card/80 border border-border p-8 md:p-10 rounded-[2.5rem] backdrop-blur-2xl shadow-2xl">
              <div className="flex items-center gap-4 mb-8">
               <div className="p-3 bg-red-500/20 rounded-2xl border border-red-500/30">
                 <LogOut className="w-8 h-8 text-red-500" />
@@ -116,7 +116,7 @@ function ExitFormInner() {
               </div>
             </div>
 
-            <div className="text-center py-12 border-2 border-dashed border-neutral-800 rounded-3xl">
+            <div className="text-center py-12 border-2 border-dashed border-border rounded-3xl">
                <Scan className="w-16 h-16 mx-auto text-neutral-800 mb-6" />
                <p className="text-neutral-100 text-lg font-bold mb-2">Scan Exit QR Code</p>
                <p className="text-neutral-500 text-sm px-10">
@@ -143,7 +143,7 @@ function ExitFormInner() {
 export default function ExitPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0a0a0c] flex items-center justify-center">
+      <div className="min-h-screen bg-background flex items-center justify-center">
         <Loader2 className="w-10 h-10 animate-spin text-red-500" />
       </div>
     }>

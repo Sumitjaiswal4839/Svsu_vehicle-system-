@@ -65,7 +65,7 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative overflow-x-hidden overflow-y-auto">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative overflow-x-hidden overflow-y-auto">
       {/* Background glows */}
       <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-orange-600/10 rounded-full blur-[150px]" />
       <div className="absolute bottom-[-20%] right-[-10%] w-[40%] h-[40%] bg-blue-600/8 rounded-full blur-[150px]" />
@@ -80,7 +80,7 @@ export default function ForgotPasswordPage() {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl my-auto"
+            className="bg-card/80 border border-border p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl my-auto"
           >
             {/* Header */}
             <div className="flex flex-col items-center mb-10">
@@ -113,7 +113,7 @@ export default function ForgotPasswordPage() {
                     value={formData.rollNo}
                     onChange={(e) => setFormData({ ...formData, rollNo: e.target.value })}
                     placeholder="e.g. 23UGBCE09165"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/40 transition-all"
+                    className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/40 transition-all"
                   />
                 </div>
               </div>
@@ -128,7 +128,7 @@ export default function ForgotPasswordPage() {
                     value={formData.vehicleNo}
                     onChange={(e) => setFormData({ ...formData, vehicleNo: e.target.value })}
                     placeholder="e.g. HR 30 T 9321"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/40 transition-all uppercase font-mono font-bold tracking-wider"
+                    className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-orange-500/40 focus:border-orange-500/40 transition-all uppercase font-mono font-bold tracking-wider"
                   />
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function ForgotPasswordPage() {
                     value={formData.newPassword}
                     onChange={(e) => setFormData({ ...formData, newPassword: e.target.value })}
                     placeholder="Minimum 6 characters"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all"
+                    className="w-full bg-background border border-border rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-orange-500/40 transition-all"
                   />
                   <button
                     type="button"
@@ -174,12 +174,12 @@ export default function ForgotPasswordPage() {
                     value={formData.confirmPassword}
                     onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
                     placeholder="Re-enter new password"
-                    className={`w-full bg-neutral-950 border rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 transition-all ${
+                    className={`w-full bg-background border rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 transition-all ${
                       formData.confirmPassword && formData.newPassword !== formData.confirmPassword
                         ? 'border-red-500/50 focus:ring-red-500/30'
                         : formData.confirmPassword && formData.newPassword === formData.confirmPassword
                         ? 'border-green-500/50 focus:ring-green-500/30'
-                        : 'border-neutral-800 focus:ring-orange-500/40'
+                        : 'border-border focus:ring-orange-500/40'
                     }`}
                   />
                   <button
@@ -214,7 +214,7 @@ export default function ForgotPasswordPage() {
           <motion.div
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="w-full max-w-md bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl relative z-10 my-auto"
+            className="w-full max-w-md bg-card/80 border border-border p-6 md:p-8 rounded-[2rem] backdrop-blur-2xl shadow-2xl relative z-10 my-auto"
           >
             <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-6 border border-green-500/30 shadow-[0_0_30px_rgba(34,197,94,0.15)]">
               <CheckCircle2 className="w-10 h-10 text-green-500" />

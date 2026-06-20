@@ -150,4 +150,21 @@ model AuditLog {
   @@index([action])
 }
 
+model ActivityLog {
+  id        String   @id @default(uuid())
+  type      String   // ENTRY or EXIT
+  fullName  String
+  rollNo    String
+  faculty   String
+  course    String
+  semester  String
+  vehicleNo String
+  timestamp DateTime
+  createdAt DateTime @default(now())
+
+  @@index([rollNo])
+  @@index([vehicleNo])
+  @@index([timestamp])
+}
+
 

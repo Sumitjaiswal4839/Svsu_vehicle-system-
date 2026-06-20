@@ -111,7 +111,7 @@ export default function HiddenTerminal() {
             className="w-full max-w-2xl bg-[#0c0c0e] border border-green-500/30 rounded-xl overflow-hidden shadow-[0_0_50px_rgba(34,197,94,0.2)]"
           >
             {/* Terminal Header */}
-            <div className="bg-neutral-900 px-4 py-2 flex items-center justify-between border-b border-neutral-800">
+            <div className="bg-card px-4 py-2 flex items-center justify-between border-b border-border">
               <div className="flex items-center gap-2">
                 <Terminal className="w-4 h-4 text-green-500" />
                 <span className="text-[10px] font-mono text-neutral-400 uppercase tracking-widest">SVSU_SECURE_KERNEL</span>

@@ -6,6 +6,7 @@ import ThemeToggle from "@/components/ThemeToggle";
 import { Toaster } from "sonner";
 import HiddenTerminal from "@/components/HiddenTerminal";
 import Navbar from "@/components/Navbar";
+import ErrorBoundary from "@/components/ErrorBoundary";
 
 export const metadata: Metadata = {
   title: "SVSU Vehicle Info | Entry-Exit System",
@@ -22,7 +23,7 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.png" />
-        <meta name="theme-color" content="#0a0a0c" />
+        <meta name="theme-color" content="#0D1117" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
       </head>
@@ -32,7 +33,9 @@ export default function RootLayout({
           <Toaster position="top-right" richColors />
           <Navbar />
           <HiddenTerminal />
-          {children}
+          <ErrorBoundary>
+            {children}
+          </ErrorBoundary>
         </ThemeProvider>
       </body>
     </html>

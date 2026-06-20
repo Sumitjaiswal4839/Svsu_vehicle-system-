@@ -27,6 +27,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { toast } from 'sonner';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAutoBuilding, BUILDING_MAP } from '@/lib/building-logic';
+import { isValidVehicleNumber, formatVehicleNumber } from '@/lib/validation';
 
 
 function ProfileContent() {
@@ -131,13 +132,23 @@ function ProfileContent() {
       return;
     }
 
+    // Vehicle number validation
+    if (!isValidVehicleNumber(formData.vehicleNo)) {
+      toast.error('Invalid vehicle number format. Use format: HR 26 AB 1234');
+      return;
+    }
+
+    // Auto-format vehicle number before saving
+    const formattedVehicleNo = formatVehicleNumber(formData.vehicleNo);
+    const dataToSave = { ...formData, vehicleNo: formattedVehicleNo };
+
 
     setLoading(true);
     try {
       const res = await fetch('/api/profile', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify(dataToSave),
       });
 
       const data = await res.json();
@@ -192,15 +203,15 @@ function ProfileContent() {
 
   if (fetchingProfile) {
     return (
-      <div className="min-h-screen bg-[#0a0a0c] flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-accent animate-spin mb-4" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[color:var(--accent)] animate-spin mb-4" />
         <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs">Securing Session...</p>
       </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-[#0a0a0c] text-neutral-100 flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative">
+    <main className="min-h-screen bg-background text-foreground flex flex-col items-center pt-28 pb-10 px-4 md:px-8 relative">
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none" />
 
       <div className="z-10 w-full max-w-xl my-auto">
@@ -211,12 +222,12 @@ function ProfileContent() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
+              className="bg-card/80 border border-border p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
             >
               <div className="flex items-center justify-between mb-8">
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-accent/20 rounded-2xl border border-accent/30">
-                    <User className="w-6 h-6 text-accent" />
+                    <User className="w-6 h-6 text-[color:var(--accent)]" />
                   </div>
                   <div>
                     <h1 className="text-2xl font-black">{isEdit ? 'Update Profile' : 'New Registration'}</h1>
@@ -236,14 +247,14 @@ function ProfileContent() {
                     value={formData.name}
                     onChange={handleChange}
                     placeholder="E.g. Sumit Bhardwaj"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                    className="w-full bg-background border border-border rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                   />
                 </div>
 
                 <div className="space-y-4">
                   <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Profile Photo (Selfie)</label>
                   <div className="flex items-center gap-6">
-                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-neutral-800 bg-neutral-950 flex-shrink-0">
+                    <div className="relative w-24 h-24 rounded-2xl overflow-hidden border-2 border-border bg-background flex-shrink-0">
                       {profilePreview ? (
                         <img src={profilePreview} alt="Profile" className="w-full h-full object-cover" />
                       ) : (
@@ -273,7 +284,7 @@ function ProfileContent() {
                       value={formData.rollNo}
                       onChange={handleChange}
                       placeholder="2100..."
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                      className="w-full bg-background border border-border rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -286,7 +297,7 @@ function ProfileContent() {
                         value={formData.password}
                         onChange={handleChange}
                         placeholder="••••••••"
-                        className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                        className="w-full bg-background border border-border rounded-2xl pl-12 pr-12 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                       />
                       <button
                         type="button"
@@ -305,7 +316,7 @@ function ProfileContent() {
                     name="faculty"
                     value={formData.faculty}
                     onChange={handleChange}
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
+                    className="w-full bg-background border border-border rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
                   >
                     <option value="">Select Faculty</option>
                     <option value="Skill Faculty of Engineering & Technology">Skill Faculty of Engineering & Technology</option>
@@ -323,7 +334,7 @@ function ProfileContent() {
                       value={formData.course}
                       onChange={handleChange}
                       placeholder="B.Tech CS"
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
+                      className="w-full bg-background border border-border rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all"
                     />
                   </div>
                   <div className="space-y-2">
@@ -332,7 +343,7 @@ function ProfileContent() {
                       name="semester"
                       value={formData.semester}
                       onChange={handleChange}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
+                      className="w-full bg-background border border-border rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none"
                     >
                       <option value="">Select Semester</option>
                       {[1,2,3,4,5,6,7,8].map(sem => (
@@ -345,12 +356,12 @@ function ProfileContent() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">Assigned Security Zone (Building)</label>
                   <div className="relative">
-                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-accent" />
+                    <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[color:var(--accent)]" />
                     <select
                       name="buildingId"
                       value={formData.buildingId}
                       onChange={handleChange}
-                      className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none font-bold text-accent"
+                      className="w-full bg-background border border-border rounded-2xl pl-12 pr-4 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all appearance-none font-bold text-[color:var(--accent)]"
                     >
                       <option value="">Select Building</option>
                       {BUILDING_MAP.map(b => (
@@ -358,7 +369,7 @@ function ProfileContent() {
                       ))}
                     </select>
                     <div className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none">
-                       <div className="px-2 py-0.5 bg-accent/10 rounded text-[8px] font-black uppercase text-accent border border-accent/20">Auto-Assigned</div>
+                       <div className="px-2 py-0.5 bg-accent/10 rounded text-[8px] font-black uppercase text-[color:var(--accent)] border border-accent/20">Auto-Assigned</div>
                     </div>
                   </div>
                   <p className="text-[9px] text-neutral-600 italic ml-1">* Based on your Faculty/Course. You can override if incorrect.</p>
@@ -382,7 +393,7 @@ function ProfileContent() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
+              className="bg-card/80 border border-border p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
             >
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-3 bg-purple-500/20 rounded-2xl border border-purple-500/30">
@@ -402,14 +413,14 @@ function ProfileContent() {
                     value={formData.vehicleNo}
                     onChange={handleChange}
                     placeholder="HR 26 AB 1234"
-                    className="w-full bg-neutral-950 border border-neutral-800 rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all uppercase font-mono font-bold"
+                    className="w-full bg-background border border-border rounded-2xl px-4 md:px-6 py-3 md:py-4 focus:outline-none focus:ring-2 focus:ring-accent/40 transition-all uppercase font-mono font-bold"
                   />
                 </div>
 
                 <div className="space-y-4">
                   <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">RC Photo (Mandatory)</label>
                   {!rcPreview ? (
-                    <div className="bg-neutral-950 border border-neutral-800 rounded-[2rem] p-4">
+                    <div className="bg-background border border-border rounded-[2rem] p-4">
                       <CameraCapture 
                         facingMode="environment"
                         onCapture={(img) => {
@@ -449,7 +460,7 @@ function ProfileContent() {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
+              className="bg-card/80 border border-border p-6 md:p-8 rounded-[2rem] md:rounded-[2.5rem] backdrop-blur-2xl shadow-2xl"
             >
               <div className="flex items-center gap-4 mb-8">
                 <div className="p-3 bg-blue-500/20 rounded-2xl border border-blue-500/30">
@@ -466,7 +477,7 @@ function ProfileContent() {
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">College ID Card (Front)</label>
                   {!idFrontPreview ? (
-                    <div className="bg-neutral-950 border border-neutral-800 rounded-[2rem] p-4">
+                    <div className="bg-background border border-border rounded-[2rem] p-4">
                       <CameraCapture 
                         facingMode="environment"
                         onCapture={(img) => {
@@ -489,7 +500,7 @@ function ProfileContent() {
                 <div className="space-y-3">
                   <label className="text-[10px] font-bold text-neutral-500 uppercase tracking-widest ml-1">College ID Card (Back)</label>
                   {!idBackPreview ? (
-                    <div className="bg-neutral-950 border border-neutral-800 rounded-[2rem] p-4">
+                    <div className="bg-background border border-border rounded-[2rem] p-4">
                       <CameraCapture 
                         facingMode="environment"
                         onCapture={(img) => {
@@ -528,7 +539,7 @@ function ProfileContent() {
               key="step0"
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-neutral-900/40 border border-neutral-800 p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] backdrop-blur-2xl shadow-2xl text-center"
+              className="bg-card/80 border border-border p-6 md:p-10 rounded-[2rem] md:rounded-[3rem] backdrop-blur-2xl shadow-2xl text-center"
             >
               <div className="flex flex-col items-center mb-8">
                 <div className="w-20 h-20 bg-green-500/20 rounded-full flex items-center justify-center mb-4 border border-green-500/30 overflow-hidden relative">
@@ -561,7 +572,7 @@ function ProfileContent() {
               <div className="grid grid-cols-1 gap-3">
                 <button
                   onClick={downloadQR}
-                  className="w-full bg-neutral-950 border border-neutral-800 hover:border-accent/40 text-white font-bold py-3 md:py-4 rounded-2xl flex items-center justify-center gap-2 transition-all"
+                  className="w-full bg-background border border-border hover:border-accent/40 text-white font-bold py-3 md:py-4 rounded-2xl flex items-center justify-center gap-2 transition-all"
                 >
                   <Download className="w-5 h-5" />
                   Save to Device
@@ -575,6 +586,7 @@ function ProfileContent() {
                 >
                   Logout Securely
                 </button>
+                <DeleteAccountButton />
               </div>
             </motion.div>
           )}
@@ -586,12 +598,72 @@ function ProfileContent() {
 export default function StudentProfilePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-[#0a0a0c] flex flex-col items-center justify-center">
-        <Loader2 className="w-12 h-12 text-accent animate-spin mb-4" />
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center">
+        <Loader2 className="w-12 h-12 text-[color:var(--accent)] animate-spin mb-4" />
         <p className="text-neutral-500 font-bold uppercase tracking-widest text-xs">Loading Security Portal...</p>
       </div>
     }>
       <ProfileContent />
     </Suspense>
+  );
+}
+
+function DeleteAccountButton() {
+  const router = useRouter();
+  const [confirming, setConfirming] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      const res = await fetch('/api/profile', { method: 'DELETE' });
+      if (res.ok) {
+        toast.success('Account deleted successfully');
+        router.push('/student-login');
+      } else {
+        const data = await res.json();
+        toast.error(data.error || 'Failed to delete account');
+      }
+    } catch {
+      toast.error('Connection error');
+    } finally {
+      setDeleting(false);
+      setConfirming(false);
+    }
+  };
+
+  if (confirming) {
+    return (
+      <div className="mt-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl space-y-3">
+        <p className="text-red-400 text-xs font-bold uppercase tracking-widest text-center">
+          This will permanently delete your account and all entry records. This cannot be undone.
+        </p>
+        <div className="flex gap-3">
+          <button
+            onClick={() => setConfirming(false)}
+            className="flex-1 py-3 bg-neutral-800 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-neutral-700 transition-all"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className="flex-1 py-3 bg-red-600 text-white rounded-xl font-bold text-xs uppercase tracking-widest hover:bg-red-500 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {deleting ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+            {deleting ? 'Deleting...' : 'Confirm Delete'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <button
+      onClick={() => setConfirming(true)}
+      className="w-full text-red-600/60 text-[9px] font-black uppercase tracking-widest transition-colors py-3 hover:text-red-500 rounded-xl mt-1"
+    >
+      Delete My Account (GDPR)
+    </button>
   );
 }

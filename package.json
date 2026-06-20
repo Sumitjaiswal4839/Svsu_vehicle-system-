@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "node scripts/seed.js",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "migrate": "prisma migrate deploy",
+    "migrate:dev": "prisma migrate dev"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.8.0",

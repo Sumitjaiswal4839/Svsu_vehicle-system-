@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
 
 export async function GET(request: Request) {
   try {
@@ -35,6 +34,9 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const search = searchParams.get('search') || '';
     const filterDate = searchParams.get('date'); // YYYY-MM-DD
+    const page = Math.max(1, parseInt(searchParams.get('page') || '1', 10));
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get('limit') || '20', 10)));
+    const offset = (page - 1) * limit;
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -68,7 +70,20 @@ export async function GET(request: Request) {
     // Auto-history logic: entries older than 8 hours are treated as exited
     const eightHoursAgo = new Date(Date.now() - 8 * 60 * 60 * 1000);
 
-    const [activeVehicles, exitedVehicles, temporaryVisitors] = await Promise.all([
+    const historyWhereClause = {
+      OR: [
+        { exitTime: { not: null, gte: historyStart, lt: historyEnd } },
+        { 
+          exitTime: null, 
+          entryTime: { lt: eightHoursAgo, gte: historyStart } 
+        }
+      ],
+      isTemporary: false,
+      ...searchFilter,
+      ...buildingFilter
+    };
+
+    const [activeVehicles, exitedVehicles, temporaryVisitors, totalExited] = await Promise.all([
       // Currently inside (Entries < 8h old and no exit time)
       prisma.entryRecord.findMany({
         where: {
@@ -82,21 +97,11 @@ export async function GET(request: Request) {
       }),
       // History (Manual exits OR entries > 8h old)
       prisma.entryRecord.findMany({
-        where: {
-          OR: [
-            { exitTime: { not: null, gte: historyStart, lt: historyEnd } },
-            { 
-              exitTime: null, 
-              entryTime: { lt: eightHoursAgo, gte: historyStart } 
-            }
-          ],
-          isTemporary: false,
-          ...searchFilter,
-          ...buildingFilter
-        },
+        where: historyWhereClause,
         include: { profile: true },
         orderBy: { entryTime: 'desc' },
-        take: 50,
+        take: limit,
+        skip: offset,
       }),
       // Temporary Visitors (Recent only)
       prisma.entryRecord.findMany({
@@ -109,11 +114,14 @@ export async function GET(request: Request) {
         },
         orderBy: { entryTime: 'desc' },
       }),
+      // Total count for pagination
+      prisma.entryRecord.count({ where: historyWhereClause }),
     ]);
 
 
     // Overstayed logic: entryTime < 8 hours ago
     const eightHoursAgoLimit = new Date(Date.now() - 8 * 60 * 60 * 1000);
+    const totalPages = Math.ceil(totalExited / limit);
 
     return NextResponse.json({
       activeVehicles,
@@ -123,9 +131,13 @@ export async function GET(request: Request) {
       guardBuildingName,
       guardName,
       is_admin,
+      pagination: {
+        page,
+        limit,
+        totalPages,
+        totalExited,
+      },
       stats: {
-
-
         totalToday: await prisma.entryRecord.count({ where: { entryTime: { gte: today } } }),
         insideCount: activeVehicles.length,
         overstayedCount: activeVehicles.filter(v => new Date(v.entryTime) < eightHoursAgoLimit).length,
