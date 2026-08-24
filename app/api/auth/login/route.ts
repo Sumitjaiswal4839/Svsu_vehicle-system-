@@ -3,6 +3,7 @@ import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { SignJWT } from 'jose';
 import { cookies, headers } from 'next/headers';
+import crypto from 'crypto';
 import { logAudit } from '@/lib/audit';
 import { checkRateLimit, resetRateLimit } from '@/lib/rate-limit';
 import { JWT_SECRET } from '@/lib/jwt';
@@ -105,6 +106,7 @@ export async function POST(request: Request) {
         token: accessToken,
         ipAddress: ip,
         userAgent: userAgent,
+        refreshTokenHash: crypto.createHash('sha256').update(refreshToken).digest('hex'),
         expiresAt: new Date(Date.now() + 15 * 60 * 1000),
       }
     });

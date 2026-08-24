@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "SVSU Gate Pass",
+    "slug": "svsu-gate-pass-student",
+    "scheme": "svsugatepass",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0a0a0c"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.svsu.gatepass.student",
+      "infoPlist": {
+        "NSCameraUsageDescription": "SVSU Gate Pass needs camera access to capture your profile photo, RC and ID card for verification, and to scan the gate QR code for entry/exit.",
+        "NSPhotoLibraryUsageDescription": "Allow SVSU Gate Pass to save your Gate Pass QR code to your photos.",
+        "NSPhotoLibraryAddUsageDescription": "Allow SVSU Gate Pass to save your Gate Pass QR code to your photos."
+      }
+    },
+    "android": {
+      "package": "com.svsu.gatepass.student",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0a0c"
+      },
+      "permissions": [
+        "CAMERA",
+        "READ_EXTERNAL_STORAGE",
+        "WRITE_EXTERNAL_STORAGE"
+      ]
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "SVSU Gate Pass needs camera access to capture verification photos and scan the gate QR code."
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "SVSU Gate Pass needs photo library access to pick verification photos."
+        }
+      ],
+      [
+        "expo-media-library",
+        {
+          "photosPermission": "Allow SVSU Gate Pass to save your Gate Pass QR to your photos.",
+          "savePhotosPermission": "Allow SVSU Gate Pass to save your Gate Pass QR to your photos."
+        }
+      ],
+      "expo-asset"
+    ],
+    "extra": {
+      "apiBaseUrl": "https://YOUR-DEPLOYED-BACKEND-URL.example.com"
+    }
+  }
+}

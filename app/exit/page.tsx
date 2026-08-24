@@ -31,9 +31,13 @@ function ExitFormInner() {
     if (profileId || vehicleNoParam) {
       const autoExit = async () => {
         try {
+          const idempotencyKey = crypto.randomUUID();
           const response = await fetch('/api/exit', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Idempotency-Key': idempotencyKey 
+            },
             body: JSON.stringify({ 
               profileId: profileId || undefined,
               vehicleNo: vehicleNoParam || undefined 
@@ -41,12 +45,17 @@ function ExitFormInner() {
           });
           const data = await response.json();
           if (response.ok) {
+            window.history.replaceState(null, '', '/');
             setExitedData({ name: data.name, vehicleNo: data.vehicleNo });
             setSuccess(true);
             toast.success('Exit Processed Successfully!');
             setTimeout(() => router.push('/'), 4000);
           } else {
-            toast.error(data.error || 'Exit failed');
+            if (response.status === 401) {
+              toast.error('Please open this scan from inside the SVSU Security app while logged in — not your phone\'s camera app.');
+            } else {
+              toast.error(data.error || 'Exit failed');
+            }
             setLoading(false);
           }
         } catch (error) {

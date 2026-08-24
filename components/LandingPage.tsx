@@ -2,12 +2,14 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Shield, Users, User, LayoutDashboard, ArrowRight, Sparkles, Lock } from 'lucide-react';
+import { Shield, Users, LayoutDashboard, ArrowRight, Sparkles, Lock, Smartphone, Download } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useTheme } from './ThemeProvider';
+import FeedbackModal from './FeedbackModal';
 
 export default function LandingPage() {
   const { theme, toggleTheme } = useTheme();
+  const [isFeedbackOpen, setIsFeedbackOpen] = useState(false);
   const [userData, setUserData] = useState<{ name: string; role: string; building?: string } | null>(null);
   const [dayWish, setDayWish] = useState('');
 
@@ -24,7 +26,7 @@ export default function LandingPage() {
           setUserData({ name: sData.name, role: 'student' });
           return;
         }
-      } catch (e) {}
+      } catch (e) { }
 
       try {
         const gRes = await fetch('/api/dashboard');
@@ -37,25 +39,13 @@ export default function LandingPage() {
           });
           return;
         }
-      } catch (e) {}
+      } catch (e) { }
     };
     checkAuth();
   }, []);
 
   const cards = [
-    (!userData || userData.role === 'student') && {
-      href: '/profile',
-      icon: <User className="w-6 h-6" />,
-      title: 'Student Portal',
-      desc: 'Register your vehicle and get your permanent QR Gate Pass.',
-      cta: 'My Profile',
-      gradient: 'from-indigo-500/20 to-violet-500/10',
-      border: 'border-indigo-500/30 hover:border-indigo-400',
-      iconBg: 'bg-indigo-500/20 text-indigo-400',
-      ctaColor: 'text-indigo-400',
-      glow: 'hover:shadow-[0_20px_60px_rgba(99,102,241,0.25)]',
-    },
-    (!userData || userData.role !== 'student') && {
+    {
       href: '/visitor-entry',
       icon: <Users className="w-6 h-6" />,
       title: 'Guest Access',
@@ -67,7 +57,7 @@ export default function LandingPage() {
       ctaColor: 'text-sky-400',
       glow: 'hover:shadow-[0_20px_60px_rgba(14,165,233,0.25)]',
     },
-    (!userData || userData.role !== 'student') && {
+    {
       href: '/admin',
       icon: <LayoutDashboard className="w-6 h-6" />,
       title: 'Security Hub',
@@ -80,7 +70,7 @@ export default function LandingPage() {
       glow: 'hover:shadow-[0_20px_60px_rgba(139,92,246,0.25)]',
       span: true,
     },
-  ].filter(Boolean) as any[];
+  ];
 
   return (
     <main className="min-h-screen flex flex-col items-center justify-center p-4 md:p-8 pt-28 pb-16 relative overflow-hidden transition-colors duration-500"
@@ -157,7 +147,7 @@ export default function LandingPage() {
         >
           {userData
             ? `Day by day, we are committed to your safety. Have a wonderful ${new Date().toLocaleDateString('en-US', { weekday: 'long' })}!`
-            : 'Automated QR-based entry and exit management for campus vehicles and temporary visitors.'}
+            : 'Automated QR-Based Entry and Exit Management Systen for Students and Temporary Visitors.'}
         </motion.p>
 
         {/* Cards */}
@@ -195,6 +185,45 @@ export default function LandingPage() {
               </Link>
             </motion.div>
           ))}
+
+          {/* Custom Student App Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.45 }}
+            className="sm:col-span-2 lg:col-span-1"
+          >
+            <div
+              className={`group flex flex-col items-start p-7 md:p-8 rounded-[2rem] border backdrop-blur-xl transition-all duration-400 bg-gradient-to-br from-emerald-500/20 to-teal-500/10 border-emerald-500/30 hover:border-emerald-400 hover:shadow-[0_20px_60px_rgba(16,185,129,0.25)] h-full`}
+              style={{ background: `linear-gradient(135deg, var(--card) 0%, var(--card) 100%)` }}
+            >
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 bg-emerald-500/20 text-emerald-400 group-hover:scale-110 transition-transform duration-300`}>
+                <Smartphone className="w-6 h-6" />
+              </div>
+
+              <h3 className="text-xl md:text-2xl font-black mb-2" style={{ color: 'var(--foreground)' }}>
+                Student App
+              </h3>
+              <p className="text-sm mb-6 leading-relaxed text-left" style={{ color: 'var(--foreground)', opacity: 0.5 }}>
+                Download the official mobile app for QR entry, profile management, and more.
+              </p>
+
+              <div className="mt-auto flex flex-col gap-3 w-full">
+                <a
+                  href="/api/download?platform=ANDROID"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+                >
+                  <Download className="w-4 h-4" /> Android (APK)
+                </a>
+                <a
+                  href="/api/download?platform=IOS"
+                  className="w-full flex items-center justify-center gap-2 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-500 rounded-xl text-xs font-black uppercase tracking-widest transition-all"
+                >
+                  <Download className="w-4 h-4" /> iOS App
+                </a>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* Stats bar */}
@@ -219,17 +248,43 @@ export default function LandingPage() {
       </div>
 
       {/* Footer */}
-      <div className="mt-16 text-[10px] font-black uppercase tracking-[0.3em] z-10 flex flex-col items-center gap-3"
-        style={{ color: 'var(--foreground)', opacity: 0.3 }}>
-        <div className="flex items-center gap-5">
-          <span>Safety</span>
-          <span className="w-1 h-1 rounded-full" style={{ background: 'var(--foreground)', opacity: 0.3 }} />
-          <span>Security</span>
-          <span className="w-1 h-1 rounded-full" style={{ background: 'var(--foreground)', opacity: 0.3 }} />
-          <span>Efficiency</span>
+      <div className="mt-16 text-[10px] font-black uppercase tracking-[0.3em] z-10 flex flex-col items-center gap-4">
+
+        {/* Sub-footer Text */}
+        <div className="flex flex-col items-center gap-3" style={{ color: 'var(--foreground)', opacity: 0.35 }}>
+          <div className="flex items-center gap-5">
+            <span>Safety</span>
+            <span className="w-1 h-1 rounded-full bg-current opacity-40" />
+            <span>Security</span>
+            <span className="w-1 h-1 rounded-full bg-current opacity-40" />
+            <span>Efficiency</span>
+          </div>
+          <p>&copy; 2026 SVSU Security &bull; Build for Safety</p>
         </div>
-        &copy; 2026 SVSU Security &bull; Engineered for Safety
+
+        {/* Action Links */}
+        <div className="flex items-center justify-center space-x-4 text-xs md:text-sm font-extrabold" style={{ color: 'var(--foreground)' }}>
+          <button
+            onClick={() => setIsFeedbackOpen(true)}
+            className="opacity-70 hover:opacity-100 hover:text-[color:var(--accent)] transition-all"
+          >
+            Feedback
+          </button>
+          <span className="opacity-30">•</span>
+          <Link href="/terms" className="opacity-70 hover:opacity-100 hover:text-[color:var(--accent)] transition-all">
+            Terms and Conditions
+          </Link>
+          <span className="opacity-30">•</span>
+          <button
+            onClick={() => alert('Welcome to the SVSU Gate Pass system. Download the app or use the dashboard to manage entries.')}
+            className="opacity-70 hover:opacity-100 hover:text-[color:var(--accent)] transition-all"
+          >
+            How it works
+          </button>
+        </div>
       </div>
+
+      <FeedbackModal isOpen={isFeedbackOpen} onClose={() => setIsFeedbackOpen(false)} />
     </main>
   );
 }

@@ -1,9 +1,9 @@
 /**
  * In-memory rate limiter for login endpoints.
  * Max 5 attempts per IP per 15 minutes.
- * No Redis needed — works for prototype/serverless with per-instance state.
+ * Note: For production with multiple instances, integrate Redis or Upstash 
+ * here and rely on X-Forwarded-For proxy headers.
  */
-
 interface RateLimitEntry {
   count: number;
   resetAt: number;

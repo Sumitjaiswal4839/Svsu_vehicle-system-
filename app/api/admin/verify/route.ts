@@ -1,10 +1,11 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
+import { verifySecureQR } from '@/lib/qr';
 
 export async function GET(request: Request) {
   try {
@@ -21,11 +22,21 @@ export async function GET(request: Request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
+    let id = searchParams.get('id');
     const rollNo = searchParams.get('rollNo');
+    const qr = searchParams.get('qr');
+
+    if (qr) {
+      try {
+        const payload = verifySecureQR(decodeURIComponent(qr));
+        id = payload.p; // from { p: profile.id, v: profile.vehicleNo }
+      } catch (e) {
+        return NextResponse.json({ error: 'Invalid or Forged QR Code' }, { status: 400 });
+      }
+    }
 
     if (!id && !rollNo) {
-      return NextResponse.json({ error: 'Profile ID or Roll Number is required' }, { status: 400 });
+      return NextResponse.json({ error: 'Profile ID, Roll Number, or QR is required' }, { status: 400 });
     }
 
     const profile = await prisma.userVehicleProfile.findUnique({
@@ -48,7 +59,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json(profile);
   } catch (error) {
-    console.error('Verify API Error:', error);
+    logger.error('Verify API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

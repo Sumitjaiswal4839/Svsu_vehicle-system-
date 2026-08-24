@@ -1,30 +1,33 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { JWT_SECRET } from '@/lib/jwt';
 
+import { verifyActiveSession } from '@/lib/auth';
+
 export async function GET(request: Request) {
   try {
-    const cookieStore = await cookies();
-    const token = cookieStore.get('auth_token')?.value;
+    const { isValid, userId, role } = await verifyActiveSession();
+    if (!isValid) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
     
     let guardBuildingId = null;
     let guardBuildingName = null;
     let guardName = null;
-    let is_admin = false;
+    let is_admin = role === 'ADMIN';
 
-    if (token) {
+    if (userId) {
       try {
-        const { payload } = await jwtVerify(token, JWT_SECRET);
         const user = await (prisma as any).user.findUnique({ 
-          where: { id: payload.id as string },
+          where: { id: userId },
           include: { building: true }
         });
         guardBuildingId = user?.buildingId;
         guardBuildingName = user?.building?.name;
         guardName = user?.username;
-        is_admin = user?.role === 'ADMIN';
       } catch (e) {}
     }
 
@@ -145,7 +148,7 @@ export async function GET(request: Request) {
     });
 
   } catch (error) {
-    console.error('Dashboard API Error:', error);
+    logger.error('Dashboard API Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

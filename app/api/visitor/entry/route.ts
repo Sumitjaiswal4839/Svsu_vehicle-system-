@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { uploadPhoto } from '@/lib/supabase';
@@ -6,8 +7,13 @@ import { cookies } from 'next/headers';
 import { JWT_SECRET } from '@/lib/jwt';
 import { sanitizeString } from '@/lib/sanitize';
 
+import { verifyActiveSession } from '@/lib/auth';
+
 export async function POST(request: Request) {
   try {
+    const { isValid } = await verifyActiveSession();
+    if (!isValid) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await request.json();
     const { name: rawName, purpose: rawPurpose, contact: rawContact, photo, buildingId, vehicleNo, isHackathon } = body;
 
@@ -55,7 +61,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(visitor);
   } catch (error) {
-    console.error('Visitor Entry Error:', error);
+    logger.error('Visitor Entry Error:', error);
     return NextResponse.json({ error: 'Failed to register visitor' }, { status: 500 });
   }
 }

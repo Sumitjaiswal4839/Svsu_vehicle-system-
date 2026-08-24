@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server';
 import type { NextRequest } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
-
+import { JWT_SECRET } from '@/lib/jwt';
 export async function proxy(request: NextRequest) {
   const authToken = request.cookies.get('auth_token')?.value;
   const studentToken = request.cookies.get('student_token')?.value;
@@ -49,7 +48,7 @@ export async function proxy(request: NextRequest) {
            response.cookies.set('auth_token', newAccessToken, {
              httpOnly: true,
              secure: process.env.NODE_ENV === 'production',
-             sameSite: 'lax',
+             sameSite: 'strict',
              maxAge: 15 * 60,
              path: '/',
            });

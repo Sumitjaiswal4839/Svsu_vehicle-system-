@@ -1,9 +1,11 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { jwtVerify, SignJWT } from 'jose';
 import { cookies } from 'next/headers';
 import { prisma } from '@/lib/prisma';
 
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
+import crypto from 'crypto';
 
 export async function POST() {
   try {
@@ -12,6 +14,11 @@ export async function POST() {
 
     if (!refreshToken) {
       return NextResponse.json({ error: 'No refresh token' }, { status: 401 });
+    }
+    const hash = crypto.createHash('sha256').update(refreshToken).digest('hex');
+    const session = await prisma.session.findUnique({ where: { refreshTokenHash: hash } });
+    if (!session || session.expiresAt < new Date()) {
+      return NextResponse.json({ error: 'Session revoked' }, { status: 401 });
     }
 
     // Verify Refresh Token
@@ -38,7 +45,7 @@ export async function POST() {
     cookieStore.set('auth_token', newAccessToken, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      sameSite: 'strict',
       maxAge: 15 * 60,
       path: '/',
     });
@@ -47,7 +54,7 @@ export async function POST() {
       cookieStore.set('admin_token', newAccessToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
-        sameSite: 'lax',
+        sameSite: 'strict',
         maxAge: 15 * 60,
         path: '/',
       });
@@ -55,7 +62,7 @@ export async function POST() {
 
     return NextResponse.json({ message: 'Token refreshed' });
   } catch (error) {
-    console.error('Refresh Error:', error);
+    logger.error('Refresh Error:', error);
     return NextResponse.json({ error: 'Invalid refresh token' }, { status: 401 });
   }
 }

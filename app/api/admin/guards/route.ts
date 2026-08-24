@@ -1,3 +1,4 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
@@ -106,7 +107,7 @@ export async function POST(request: Request) {
 
     return NextResponse.json(newGuard);
   } catch (error) {
-    console.error('Guard Creation Error:', error);
+    logger.error('Guard Creation Error:', error);
     return NextResponse.json({ error: 'Creation failed' }, { status: 500 });
   }
 }

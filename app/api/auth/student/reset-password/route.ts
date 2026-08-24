@@ -1,9 +1,18 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
+import { checkRateLimit } from '@/lib/rate-limit';
+
 export async function POST(request: Request) {
   try {
+    const ip = request.headers.get('x-forwarded-for') || '127.0.0.1';
+    const rl = checkRateLimit(`reset:${ip}`);
+    if (!rl.allowed) {
+      return NextResponse.json({ error: 'Too many attempts. Try again later.' }, { status: 429 });
+    }
+
     const { rollNo, vehicleNo, newPassword } = await request.json();
 
     if (!rollNo || !vehicleNo || !newPassword) {
@@ -43,7 +52,7 @@ export async function POST(request: Request) {
       name: student.name
     });
   } catch (error) {
-    console.error('Reset Password Error:', error);
+    logger.error('Reset Password Error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }

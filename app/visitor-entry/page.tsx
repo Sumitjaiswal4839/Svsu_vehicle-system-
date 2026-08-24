@@ -92,7 +92,7 @@ export default function VisitorEntryPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-neutral-100 p-4 md:p-8 flex flex-col pt-28 pb-12 relative">
+    <main className="min-h-screen bg-background text-foreground p-4 md:p-8 flex flex-col pt-28 pb-12 relative">
       <div className="fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(37,99,235,0.1),transparent_50%)] pointer-events-none" />
       
       <motion.div 

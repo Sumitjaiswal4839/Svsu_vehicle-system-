@@ -13,7 +13,7 @@ if (!connectionString) {
 const pool = new pg.Pool({
   connectionString,
   ssl: { rejectUnauthorized: false },
-  max: 1, // Important for serverless — limits concurrent connections
+  max: 1, // Important for serverless
 });
 
 const adapter = new PrismaPg(pool);

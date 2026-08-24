@@ -23,6 +23,7 @@ model UserVehicleProfile {
   idCardFront  String // Mandatory ID Card Front
   idCardBack   String // Mandatory ID Card Back
   profilePhoto String? // Optional profile photo
+  pushToken    String? // Expo push token for notifications
   lastLogin    DateTime @default(now())
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
@@ -33,6 +34,7 @@ model UserVehicleProfile {
 
   @@index([rollNo])
   @@index([vehicleNo])
+  @@index([pushToken])
 }
 
 
@@ -123,14 +125,15 @@ model VisitorEntry {
 }
 
 model Session {
-  id        String   @id @default(uuid())
-  userId    String
-  user      User     @relation(fields: [userId], references: [id])
-  token     String   @unique
-  ipAddress String?
-  userAgent String?
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id               String   @id @default(uuid())
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  token            String   @unique
+  refreshTokenHash String?  @unique
+  ipAddress        String?
+  userAgent        String?
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
 
   @@index([userId])
   @@index([token])
@@ -167,4 +170,44 @@ model ActivityLog {
   @@index([timestamp])
 }
 
+model AppRelease {
+  id        String   @id @default(uuid())
+  platform  String   // "ANDROID" or "IOS"
+  version   String
+  url       String   // Download URL
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
 
+  @@index([platform, isActive])
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  rollNo    String?
+  name      String?
+  rating    Int      // 1 to 5
+  comment   String?
+  source    String   // "WEB" or "APP"
+  createdAt DateTime @default(now())
+
+  @@index([rating])
+  @@index([createdAt])
+}
+
+model SystemNotification {
+  id        String   @id @default(uuid())
+  title     String
+  message   String
+  type      String   @default("INFO") // INFO, WARNING, ALERT
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+
+  @@index([isActive, createdAt])
+}
+
+model SystemSetting {
+  id        String   @id @default(uuid())
+  key       String   @unique // e.g., "MAINTENANCE_MODE"
+  value     String   // e.g., "true" or "false"
+  updatedAt DateTime @updatedAt
+}

@@ -56,6 +56,12 @@ export async function POST(request: Request) {
     const visitorContact = rawVisitorContact ? sanitizeString(rawVisitorContact) : rawVisitorContact;
     const fullName = rawFullName ? sanitizeString(rawFullName) : rawFullName;
 
+    let trustedProfile = null;
+    if (profileId) {
+      trustedProfile = await prisma.userVehicleProfile.findUnique({ where: { id: profileId } });
+      if (!trustedProfile) return NextResponse.json({ error: 'Invalid profile' }, { status: 400 });
+    }
+
     let finalPhotoUrl = visitorPhoto || photoUrl;
 
     // Handle photo upload if provided as base64
@@ -65,7 +71,7 @@ export async function POST(request: Request) {
       try {
         finalPhotoUrl = await uploadPhoto(finalPhotoUrl, fileName);
       } catch (uploadError) {
-        console.error('Photo upload failed:', uploadError);
+        logger.error('Photo upload failed:', uploadError);
         finalPhotoUrl = null;
       }
     }
@@ -81,11 +87,12 @@ export async function POST(request: Request) {
         visitorPhoto: isTemporary ? finalPhotoUrl : null,
         vehicleNo: vehicleNo || null,
         // Legacy fields mapping
-        fullName: fullName || null,
-        rollNo: rollNo || null,
-        faculty: faculty || null,
-        course: course || null,
-        semester: semester || null,
+        // Legacy fields mapping (Override with trusted profile data if available)
+        fullName: trustedProfile?.name || fullName || null,
+        rollNo: trustedProfile?.rollNo || rollNo || null,
+        faculty: trustedProfile?.faculty || faculty || null,
+        course: trustedProfile?.course || course || null,
+        semester: trustedProfile?.semester || semester || null,
         photoUrl: !isTemporary ? finalPhotoUrl : null,
         buildingId: guardBuildingId || null,
       },

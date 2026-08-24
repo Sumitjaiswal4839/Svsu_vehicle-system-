@@ -145,6 +145,7 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
             <div className="flex justify-between items-center w-full p-4 z-10 bg-gradient-to-b from-black/80 via-black/30 to-transparent backdrop-blur-[2px]">
               <button 
                 type="button"
+                aria-label="Close Camera"
                 onClick={stopCamera}
                 className="p-3 bg-black/40 hover:bg-black/60 text-white rounded-full transition-colors backdrop-blur-md border border-border"
               >
@@ -230,6 +231,7 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
             <div className="w-full z-10 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-6 flex items-center justify-around backdrop-blur-[2px]">
               <button
                 type="button"
+                aria-label="Close Camera"
                 onClick={stopCamera}
                 className="p-4 bg-black/40 hover:bg-black/60 backdrop-blur-md rounded-full text-neutral-300 border border-border/60 hover:text-white transition-all transform active:scale-95"
               >
@@ -238,6 +240,7 @@ export default function CameraCapture({ onCapture, facingMode = 'environment' }:
               
               <button
                 type="button"
+                aria-label="Capture Photo"
                 onClick={capturePhoto}
                 className="w-20 h-20 bg-white hover:bg-neutral-100 rounded-full flex items-center justify-center shadow-[0_0_35px_rgba(255,255,255,0.4)] border-4 border-neutral-300 active:scale-90 transition-all group"
               >

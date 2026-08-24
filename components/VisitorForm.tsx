@@ -68,7 +68,7 @@ export default function VisitorForm({ isOpen, onClose, onSuccess }: { isOpen: bo
                   <h2 className="text-2xl font-black">Visitor Pass</h2>
                   <p className="text-neutral-500 text-[10px] font-bold uppercase tracking-widest">SVSU Access Control</p>
                 </div>
-                <button onClick={onClose} className="p-2 hover:bg-neutral-800 rounded-full transition-colors">
+                <button aria-label="Close" onClick={onClose} className="p-2 hover:bg-neutral-800 rounded-full transition-colors">
                   <X className="w-6 h-6" />
                 </button>
               </div>

@@ -100,6 +100,7 @@ export default function QRScanner({ onScanSuccess, isOpen, onClose }: QRScannerP
                 </div>
               </div>
               <button 
+                aria-label="Close Scanner"
                 onClick={handleClose}
                 className="p-2 hover:bg-neutral-800 rounded-full transition-colors"
               >

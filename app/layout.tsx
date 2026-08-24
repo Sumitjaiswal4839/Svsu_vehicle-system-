@@ -4,13 +4,14 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/ThemeProvider";
 import ThemeToggle from "@/components/ThemeToggle";
 import { Toaster } from "sonner";
-import HiddenTerminal from "@/components/HiddenTerminal";
 import Navbar from "@/components/Navbar";
 import ErrorBoundary from "@/components/ErrorBoundary";
 
+import GlobalMaintenanceCheck from "@/components/GlobalMaintenanceCheck";
+
 export const metadata: Metadata = {
-  title: "SVSU Vehicle Info | Entry-Exit System",
-  description: "Secure QR-based vehicle management for SVSU campus.",
+  title: "SVSU Campus Control Center | Entry-Exit System",
+  description: "Entry and exit management system for SVSU campus | Security management system for SVSU campus | ",
 };
 
 export default function RootLayout({
@@ -23,6 +24,7 @@ export default function RootLayout({
       <head>
         <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/favicon.png" />
+        <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
         <meta name="theme-color" content="#0D1117" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -30,12 +32,13 @@ export default function RootLayout({
       <body className="antialiased min-h-screen bg-background text-foreground transition-colors duration-300">
         <div className="watermark" />
         <ThemeProvider>
-          <Toaster position="top-right" richColors />
-          <Navbar />
-          <HiddenTerminal />
-          <ErrorBoundary>
-            {children}
-          </ErrorBoundary>
+          <GlobalMaintenanceCheck>
+            <Toaster position="top-right" richColors />
+            <Navbar />
+            <ErrorBoundary>
+              {children}
+            </ErrorBoundary>
+          </GlobalMaintenanceCheck>
         </ThemeProvider>
       </body>
     </html>

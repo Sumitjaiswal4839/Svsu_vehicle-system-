@@ -56,6 +56,7 @@ export default function QRGenerator({ isOpen, onClose }: { isOpen: boolean, onCl
           >
             {/* Close Button */}
             <button 
+              aria-label="Close Generator"
               onClick={onClose}
               className="absolute top-6 right-6 p-2 bg-neutral-800 hover:bg-neutral-700 rounded-full text-neutral-400 hover:text-white transition-colors"
             >

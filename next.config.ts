@@ -6,7 +6,7 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     "http://localhost:3000",
     "http://127.0.0.1:3000",
-    "http://10.50.72.115:3000",
+    "http://10.40.171.114:3000",
   ],
 
   // Images: Supabase storage URLs + unoptimized for base64/blob

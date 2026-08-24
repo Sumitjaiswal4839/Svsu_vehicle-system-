@@ -32,20 +32,29 @@ function EntryFormInner() {
     if (profileId) {
       const autoRegister = async () => {
         try {
+          const idempotencyKey = crypto.randomUUID();
           const response = await fetch('/api/entry', {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 
+              'Content-Type': 'application/json',
+              'Idempotency-Key': idempotencyKey 
+            },
             body: JSON.stringify({ profileId }),
           });
           const data = await response.json();
           if (response.ok) {
+            window.history.replaceState(null, '', '/');
             setProfileData(data.entry.profile);
             setSuccess(true);
             toast.success('Automatic Entry Registered!');
             // Redirect to home after 3 seconds
             setTimeout(() => router.push('/'), 3000);
           } else {
-            toast.error(data.error || 'Auto-entry failed');
+            if (response.status === 401) {
+              toast.error('Please open this scan from inside the SVSU Security app while logged in — not your phone\'s camera app.');
+            } else {
+              toast.error(data.error || 'Auto-entry failed');
+            }
             setLoading(false);
           }
         } catch (error) {
@@ -130,15 +139,7 @@ function EntryFormInner() {
               </div>
             </div>
 
-            <div className="p-6 bg-red-500/10 border border-red-500/20 rounded-3xl mb-8 flex items-start gap-4">
-              <AlertCircle className="w-6 h-6 text-red-500 shrink-0 mt-1" />
-              <div>
-                <p className="text-sm font-bold text-red-200">Wait! Are you a student?</p>
-                <p className="text-xs text-red-200/60 leading-relaxed mt-1">
-                  Students should register their profile once in the <Link href="/profile" className="underline font-bold text-white">Student Portal</Link> to get a permanent Gate Pass for instant entry.
-                </p>
-              </div>
-            </div>
+
 
             <div className="text-center py-10 border-2 border-dashed border-border rounded-3xl">
                <p className="text-neutral-600 text-sm font-bold uppercase tracking-widest mb-2">QR Scan Required</p>

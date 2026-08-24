@@ -8,7 +8,7 @@ import { logger } from '@/lib/logger';
 export async function POST(request: Request) {
   try {
     // Verify Session (Force Logout Check)
-    const { isValid } = await verifyActiveSession();
+    const { isValid, userId, role } = await verifyActiveSession();
     if (!isValid) {
       return NextResponse.json({ error: 'Session expired or terminated. Please login again.' }, { status: 401 });
     }
@@ -19,6 +19,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Identification is required' }, { status: 400 });
     }
 
+    const guard = role !== 'ADMIN' ? await prisma.user.findUnique({ where: { id: userId } }) : null;
+
     // Find the latest active entry
     const record: any = await prisma.entryRecord.findFirst({
       where: {
@@ -28,6 +30,7 @@ export async function POST(request: Request) {
           { profileId: profileId || undefined }
         ],
         exitTime: null,
+        ...(guard?.buildingId ? { buildingId: guard.buildingId } : {}),
       },
       orderBy: {
         entryTime: 'desc',

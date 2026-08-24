@@ -6,7 +6,10 @@ export function convertToCSV(data: any[]) {
     headers.map(header => {
       let val = obj[header];
       if (val instanceof Date) val = val.toISOString();
-      if (typeof val === 'string') val = val.replace(/"/g, '""');
+      if (typeof val === 'string') {
+        if (/^[=+\-@\t\r]/.test(val)) val = "'" + val;
+        val = val.replace(/"/g, '""');
+      }
       return `"${val}"`;
     }).join(',')
   );

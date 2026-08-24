@@ -108,16 +108,6 @@ export default function Navbar() {
 
         <div className="w-[1px] h-4 bg-foreground/10 mx-1" />
 
-        {/* Student Profile (Hidden for Guards) */}
-        {userRole === 'student' && (
-          <Link 
-            href="/student/dashboard" 
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl transition-all ${pathname === '/student/dashboard' ? 'bg-accent text-white' : 'text-foreground/40 hover:text-foreground hover:bg-foreground/5'}`}
-          >
-            <User className="w-4 h-4" />
-            <span className="text-[10px] font-black uppercase tracking-widest hidden sm:block">Pass Portal</span>
-          </Link>
-        )}
 
         {/* Guard Console (Hidden for Students) */}
         {userRole === 'guard' && (
@@ -153,6 +143,7 @@ export default function Navbar() {
 
         {/* Theme Toggle */}
         <button 
+          aria-label="Toggle Theme"
           onClick={toggleTheme}
           className="p-2.5 text-foreground/40 hover:text-[color:var(--accent)] hover:bg-foreground/5 rounded-xl transition-all"
         >
@@ -163,6 +154,7 @@ export default function Navbar() {
           <div className="flex items-center gap-1">
             <div className="w-[1px] h-4 bg-foreground/10 mx-1" />
             <button 
+              aria-label="Logout"
               onClick={handleLogout}
               className="p-2.5 text-foreground/40 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-all"
               title="Logout"

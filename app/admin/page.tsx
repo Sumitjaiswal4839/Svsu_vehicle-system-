@@ -153,12 +153,14 @@ export default function GuardDashboard() {
 
     try {
       // Extract ID from URL if it's a URL
-      let profileId = decodedText;
+      let url = `/api/admin/verify?id=${decodedText}`;
       if (decodedText.includes('?p=')) {
-        profileId = decodedText.split('?p=')[1];
+        url = `/api/admin/verify?id=${decodedText.split('?p=')[1]}`;
+      } else if (decodedText.startsWith('{') && decodedText.includes('signature')) {
+        url = `/api/admin/verify?qr=${encodeURIComponent(decodedText)}`;
       }
 
-      const res = await fetch(`/api/admin/verify?id=${profileId}`);
+      const res = await fetch(url);
       const profile = await res.json();
 
       if (res.ok) {

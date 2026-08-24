@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { uploadPhoto } from '@/lib/supabase';
+import { uploadPhoto, deletePhoto } from '@/lib/supabase';
 import bcrypt from 'bcryptjs';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
 import { JWT_SECRET } from '@/lib/jwt';
+import { generateSecureQR } from '@/lib/qr';
 import { logger } from '@/lib/logger';
 import { sanitizeString } from '@/lib/sanitize';
 
@@ -30,10 +31,13 @@ export async function POST(request: Request) {
     const name = rawName ? sanitizeString(rawName) : rawName;
     const course = rawCourse ? sanitizeString(rawCourse) : rawCourse;
     const faculty = rawFaculty ? sanitizeString(rawFaculty) : rawFaculty;
-
+    
+    // Trim crucial identifiers to prevent login mismatches (mobile keyboards often add trailing spaces)
+    const cleanRollNo = typeof rollNo === 'string' ? rollNo.trim() : rollNo;
+    const cleanVehicleNo = typeof vehicleNo === 'string' ? vehicleNo.trim() : vehicleNo;
 
     // Validation
-    if (!name || !rollNo || !vehicleNo || !rcPhoto || !idCardFront || !idCardBack || !password || !faculty || !profilePhoto || !buildingId) {
+    if (!name || !cleanRollNo || !cleanVehicleNo || !rcPhoto || !idCardFront || !idCardBack || !password || !faculty || !profilePhoto || !buildingId) {
       return NextResponse.json({ error: 'Missing mandatory fields. Ensure all photos are captured and building is selected.' }, { status: 400 });
     }
 
@@ -81,7 +85,7 @@ export async function POST(request: Request) {
 
     // Check for collisions
     const existing = await prisma.userVehicleProfile.findUnique({
-      where: { rollNo }
+      where: { rollNo: cleanRollNo }
     });
 
     if (existing && (!currentStudentId || existing.id !== currentStudentId)) {
@@ -92,13 +96,13 @@ export async function POST(request: Request) {
 
     // Upsert Profile
     const profile = await prisma.userVehicleProfile.upsert({
-      where: { rollNo },
+      where: { rollNo: cleanRollNo },
       update: {
         name,
         course,
         semester,
         password: hashedPassword,
-        vehicleNo,
+        vehicleNo: cleanVehicleNo,
         license,
         faculty,
         rcPhoto: rcPhotoUrl,
@@ -110,9 +114,9 @@ export async function POST(request: Request) {
         name,
         course,
         semester,
-        rollNo,
+        rollNo: cleanRollNo,
         password: hashedPassword,
-        vehicleNo,
+        vehicleNo: cleanVehicleNo,
         license,
         faculty,
         rcPhoto: rcPhotoUrl,
@@ -158,7 +162,8 @@ export async function GET() {
       return NextResponse.json({ error: 'Profile not found' }, { status: 404 });
     }
 
-    return NextResponse.json(profile);
+    const secureQR = generateSecureQR({ p: profile.id, v: profile.vehicleNo });
+    return NextResponse.json({ ...profile, secureQR });
   } catch (error) {
     logger.error('Profile fetch failed', { error: String(error) });
     return NextResponse.json({ error: 'Session expired. Please login again.' }, { status: 401 });
@@ -176,6 +181,18 @@ export async function DELETE() {
 
     const { payload } = await jwtVerify(token, JWT_SECRET);
     const studentId = payload.id as string;
+
+    // Get the student profile before deleting
+    const profile = await prisma.userVehicleProfile.findUnique({
+      where: { id: studentId }
+    });
+
+    if (profile) {
+      if (profile.rcPhoto) await deletePhoto(profile.rcPhoto);
+      if (profile.idCardFront) await deletePhoto(profile.idCardFront);
+      if (profile.idCardBack) await deletePhoto(profile.idCardBack);
+      if (profile.profilePhoto) await deletePhoto(profile.profilePhoto);
+    }
 
     // Delete all entry records for this student
     await prisma.entryRecord.deleteMany({

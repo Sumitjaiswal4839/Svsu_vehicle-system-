@@ -1,9 +1,9 @@
+import { logger } from '@/lib/logger';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { jwtVerify } from 'jose';
 import { cookies } from 'next/headers';
-
-const JWT_SECRET = new TextEncoder().encode(process.env.JWT_SECRET || 'fallback-secret-change-me');
+import { JWT_SECRET } from '@/lib/jwt';
 
 export async function GET() {
   try {
@@ -42,7 +42,7 @@ export async function GET() {
 
     return NextResponse.json(formattedLogs);
   } catch (error) {
-    console.error('Audit Log Fetch Error:', error);
+    logger.error('Audit Log Fetch Error:', error);
     return NextResponse.json({ error: 'Failed to fetch logs' }, { status: 500 });
   }
 }

@@ -22,7 +22,8 @@ import {
   Monitor,
   Power,
   FileText,
-  UserPlus
+  UserPlus,
+  Settings
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -31,10 +32,11 @@ import Logo from '@/components/Logo';
 
 export default function AdminDashboard() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'sessions'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'students' | 'sessions' | 'apps' | 'system'>('overview');
   const [guards, setGuards] = useState<any[]>([]);
   const [students, setStudents] = useState<any[]>([]);
   const [sessions, setSessions] = useState<any[]>([]);
+  const [releases, setReleases] = useState<any[]>([]);
   const [stats, setStats] = useState<any>(null);
   const [buildings, setBuildings] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -44,6 +46,15 @@ export default function AdminDashboard() {
   const [isAddGuardOpen, setIsAddGuardOpen] = useState(false);
   const [newGuard, setNewGuard] = useState({ username: '', password: '', buildingId: '' });
   const [creating, setCreating] = useState(false);
+
+  const [uploadingApp, setUploadingApp] = useState(false);
+  const [appForm, setAppForm] = useState({ platform: 'ANDROID', version: '', url: '' });
+  const [appFile, setAppFile] = useState<File | null>(null);
+
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [notifForm, setNotifForm] = useState({ title: '', message: '', type: 'INFO' });
+  const [sendingNotif, setSendingNotif] = useState(false);
 
   const handleAddGuard = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -77,8 +88,12 @@ export default function AdminDashboard() {
     const init = async () => {
       await Promise.all([fetchGuards(), fetchStats(), fetchBuildings()]);
       if (activeTab === 'students') await fetchManagementData('students');
-
       if (activeTab === 'sessions') await fetchManagementData('sessions');
+      if (activeTab === 'apps') await fetchReleases();
+      if (activeTab === 'system') {
+        await fetchFeedbacks();
+        await fetchMaintenance();
+      }
       setLoading(false);
     };
     init();
@@ -139,6 +154,99 @@ export default function AdminDashboard() {
       }
     } catch (err) {
       toast.error('Failed to fetch guards');
+    }
+  };
+
+  const fetchReleases = async () => {
+    try {
+      const res = await fetch('/api/admin/app-releases');
+      if (res.ok) setReleases(await res.json());
+    } catch (err) {}
+  };
+
+  const handleAppUpload = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setUploadingApp(true);
+    try {
+      const formData = new FormData();
+      formData.append('platform', appForm.platform);
+      formData.append('version', appForm.version);
+      if (appFile) formData.append('file', appFile);
+      if (appForm.url) formData.append('url', appForm.url);
+
+      const res = await fetch('/api/admin/app-releases', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (res.ok) {
+        toast.success('App release updated!');
+        setAppForm({ platform: 'ANDROID', version: '', url: '' });
+        setAppFile(null);
+        fetchReleases();
+      } else {
+        const d = await res.json();
+        toast.error(d.error || 'Upload failed');
+      }
+    } catch (err) {
+      toast.error('Error uploading app');
+    } finally {
+      setUploadingApp(false);
+    }
+  };
+
+  const fetchFeedbacks = async () => {
+    try {
+      const res = await fetch('/api/feedback');
+      if (res.ok) setFeedbacks(await res.json());
+    } catch (err) {}
+  };
+
+  const fetchMaintenance = async () => {
+    try {
+      const res = await fetch('/api/maintenance');
+      if (res.ok) {
+        const data = await res.json();
+        setMaintenanceMode(data.maintenanceMode);
+      }
+    } catch (err) {}
+  };
+
+  const toggleMaintenance = async () => {
+    try {
+      const res = await fetch('/api/maintenance', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ maintenanceMode: !maintenanceMode })
+      });
+      if (res.ok) {
+        setMaintenanceMode(!maintenanceMode);
+        toast.success(`Maintenance mode ${!maintenanceMode ? 'enabled' : 'disabled'}`);
+      }
+    } catch (err) {
+      toast.error('Failed to toggle maintenance mode');
+    }
+  };
+
+  const handleSendNotification = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSendingNotif(true);
+    try {
+      const res = await fetch('/api/notifications', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(notifForm)
+      });
+      if (res.ok) {
+        toast.success('Notification broadcasted successfully!');
+        setNotifForm({ title: '', message: '', type: 'INFO' });
+      } else {
+        toast.error('Failed to send notification');
+      }
+    } catch (err) {
+      toast.error('Error sending notification');
+    } finally {
+      setSendingNotif(false);
     }
   };
 
@@ -253,7 +361,9 @@ export default function AdminDashboard() {
             {[
               { id: 'overview', label: 'Overview', icon: ShieldCheck },
               { id: 'students', label: 'Students', icon: Users },
-              { id: 'sessions', label: 'Sessions', icon: Globe }
+              { id: 'sessions', label: 'Sessions', icon: Globe },
+              { id: 'apps', label: 'Apps', icon: Smartphone },
+              { id: 'system', label: 'System', icon: Settings }
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -587,6 +697,203 @@ export default function AdminDashboard() {
                 </div>
               ))}
             </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'apps' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Upload Form */}
+              <div className="bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl">
+                <h2 className="text-xl font-bold mb-2">Publish New Release</h2>
+                <p className="text-xs text-neutral-500 mb-6">Upload APK or provide App Store URL</p>
+
+                <form onSubmit={handleAppUpload} className="space-y-4">
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-4">Platform</label>
+                    <select 
+                      value={appForm.platform}
+                      onChange={(e) => setAppForm({...appForm, platform: e.target.value})}
+                      className="w-full bg-black border border-border rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none appearance-none"
+                    >
+                      <option value="ANDROID">Android (APK)</option>
+                      <option value="IOS">iOS (App Store/IPA)</option>
+                    </select>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-4">Version String</label>
+                    <input 
+                      required
+                      type="text" 
+                      placeholder="e.g. 1.0.4"
+                      value={appForm.version}
+                      onChange={(e) => setAppForm({...appForm, version: e.target.value})}
+                      className="w-full bg-black border border-border rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none"
+                    />
+                  </div>
+
+                  {appForm.platform === 'ANDROID' ? (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-4">APK File</label>
+                      <input 
+                        required
+                        type="file" 
+                        accept=".apk"
+                        onChange={(e) => setAppFile(e.target.files?.[0] || null)}
+                        className="w-full bg-black border border-border rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-black file:uppercase file:bg-accent file:text-white"
+                      />
+                    </div>
+                  ) : (
+                    <div className="space-y-2">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-neutral-500 ml-4">App Store Link</label>
+                      <input 
+                        required
+                        type="url" 
+                        placeholder="https://apps.apple.com/..."
+                        value={appForm.url}
+                        onChange={(e) => setAppForm({...appForm, url: e.target.value})}
+                        className="w-full bg-black border border-border rounded-2xl py-4 px-6 text-sm focus:border-accent outline-none"
+                      />
+                    </div>
+                  )}
+
+                  <button 
+                    type="submit"
+                    disabled={uploadingApp}
+                    className="w-full mt-4 py-4 bg-accent text-white rounded-2xl font-black text-xs uppercase tracking-widest hover:bg-accent/80 transition-all flex items-center justify-center gap-2"
+                  >
+                    {uploadingApp ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}
+                    Publish Release
+                  </button>
+                </form>
+              </div>
+
+              {/* Release History */}
+              <div className="bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl">
+                <h2 className="text-xl font-bold mb-6">Active Releases</h2>
+                <div className="space-y-4">
+                  {releases.filter(r => r.isActive).map(release => (
+                    <div key={release.id} className="p-4 bg-foreground/[0.03] border border-border rounded-2xl flex items-center justify-between">
+                      <div className="flex items-center gap-4">
+                        <div className="w-12 h-12 bg-accent/10 rounded-xl flex items-center justify-center text-[color:var(--accent)]">
+                          {release.platform === 'ANDROID' ? <Smartphone className="w-6 h-6" /> : <Globe className="w-6 h-6" />}
+                        </div>
+                        <div>
+                          <h3 className="font-bold">{release.platform}</h3>
+                          <p className="text-xs text-neutral-500">Version {release.version}</p>
+                        </div>
+                      </div>
+                      <div className="text-[10px] font-black uppercase tracking-widest text-green-500 bg-green-500/10 px-3 py-1.5 rounded-lg">
+                        Active
+                      </div>
+                    </div>
+                  ))}
+                  {releases.length === 0 && (
+                    <p className="text-sm text-neutral-500 italic text-center py-8">No releases found.</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
+        {activeTab === 'system' && (
+          <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-6">
+            
+            {/* Top Row: Maintenance & Notifications */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              
+              {/* Maintenance Toggle */}
+              <div className="bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl flex flex-col justify-between">
+                <div>
+                  <h2 className="text-xl font-bold mb-2">Maintenance Mode</h2>
+                  <p className="text-xs text-neutral-500 mb-6">Block all user access when enabled (Admin access only).</p>
+                </div>
+                <div className="flex items-center justify-between p-6 bg-foreground/[0.03] border border-border rounded-2xl">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${maintenanceMode ? 'bg-red-500/20 text-red-500' : 'bg-green-500/20 text-green-500'}`}>
+                      <Settings className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h3 className="font-bold">System Status</h3>
+                      <p className="text-xs text-neutral-500">{maintenanceMode ? 'Offline (Maintenance)' : 'Online (Active)'}</p>
+                    </div>
+                  </div>
+                  <button 
+                    onClick={toggleMaintenance}
+                    className={`px-6 py-3 rounded-xl font-black text-xs uppercase tracking-widest transition-all ${maintenanceMode ? 'bg-red-500 text-white shadow-[0_0_20px_rgba(239,68,68,0.3)]' : 'bg-foreground/[0.05] hover:bg-foreground/10 text-foreground'}`}
+                  >
+                    {maintenanceMode ? 'Disable' : 'Enable'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Notification Sender */}
+              <div className="bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl">
+                <h2 className="text-xl font-bold mb-2">Broadcast Notification</h2>
+                <p className="text-xs text-neutral-500 mb-6">Send an in-app alert to all students.</p>
+                <form onSubmit={handleSendNotification} className="space-y-4">
+                  <input 
+                    required type="text" placeholder="Notification Title" 
+                    value={notifForm.title} onChange={e => setNotifForm({...notifForm, title: e.target.value})}
+                    className="w-full bg-black border border-border rounded-2xl py-3 px-5 text-sm focus:border-accent outline-none"
+                  />
+                  <textarea 
+                    required placeholder="Message content..." rows={2}
+                    value={notifForm.message} onChange={e => setNotifForm({...notifForm, message: e.target.value})}
+                    className="w-full bg-black border border-border rounded-2xl py-3 px-5 text-sm focus:border-accent outline-none resize-none"
+                  />
+                  <div className="flex gap-4">
+                    <select 
+                      value={notifForm.type} onChange={e => setNotifForm({...notifForm, type: e.target.value})}
+                      className="flex-1 bg-black border border-border rounded-2xl py-3 px-5 text-sm focus:border-accent outline-none appearance-none"
+                    >
+                      <option value="INFO">Info</option>
+                      <option value="WARNING">Warning</option>
+                      <option value="ALERT">Alert</option>
+                    </select>
+                    <button 
+                      type="submit" disabled={sendingNotif}
+                      className="flex-1 bg-accent hover:opacity-90 text-white rounded-2xl font-black text-xs uppercase tracking-widest flex items-center justify-center"
+                    >
+                      {sendingNotif ? 'Sending...' : 'Broadcast'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+            </div>
+
+            {/* Bottom Row: Feedback Viewer */}
+            <div className="bg-card/80 border border-border rounded-[2.5rem] p-8 backdrop-blur-xl">
+              <h2 className="text-xl font-bold mb-6">User Feedback & Ratings</h2>
+              {feedbacks.length === 0 ? (
+                <p className="text-sm text-neutral-500 italic text-center py-12">No feedback received yet.</p>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {feedbacks.map((fb, i) => (
+                    <div key={i} className="p-6 bg-foreground/[0.03] border border-border rounded-2xl">
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <p className="font-bold">{fb.name || 'Anonymous'}</p>
+                          <p className="text-xs text-neutral-500">{fb.rollNo || 'No Roll No'}</p>
+                        </div>
+                        <div className="flex text-yellow-500">
+                          {Array(fb.rating).fill(0).map((_, idx) => <span key={idx}>★</span>)}
+                        </div>
+                      </div>
+                      <p className="text-sm text-neutral-400 mb-4">{fb.comment || 'No comment provided.'}</p>
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-neutral-500">
+                        <span>{new Date(fb.createdAt).toLocaleDateString()}</span>
+                        <span className="px-2 py-1 bg-foreground/[0.05] rounded-md">{fb.source}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
           </motion.div>
         )}
       </div>

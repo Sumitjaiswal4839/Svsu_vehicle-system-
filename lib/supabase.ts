@@ -25,3 +25,18 @@ export async function uploadPhoto(base64: string, fileName: string) {
 
   return publicUrlData.publicUrl;
 }
+
+export async function deletePhoto(publicUrl: string) {
+  try {
+    const urlParts = publicUrl.split('/');
+    const fileName = urlParts[urlParts.length - 1];
+    if (fileName) {
+      const { error } = await supabase.storage
+        .from('vehicle-photos')
+        .remove([`photos/${fileName}`]);
+      if (error) throw error;
+    }
+  } catch (error) {
+    console.error('Error deleting photo:', error);
+  }
+}
